@@ -3,71 +3,83 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 )
 
 type Resource interface {
-	Get() (int, string)
+	Get(*http.Request) (int, string)
 }
 
-type Greeting struct{}
+type Greeting struct {
+	Id string
+}
 
-func (g Greeting) Get() (int, string) {
-	return 200, "hello"
+func (g *Greeting) Get(r *http.Request) (int, string) {
+	return 200, "hello " + g.Id
 }
 
 type NotFound struct{}
 
-func (n NotFound) Get() (int, string) {
+func (n *NotFound) Get(r *http.Request) (int, string) {
 	return 404, "not found"
 }
 
-func route(p string) Resource {
-	switch p {
-	case "/greeting":
-		return Greeting{}
+func MatchRoute(r string, p string) (bool, [][]string) {
+	regex, err := regexp.Compile(r)
+	if err != nil {
+		fmt.Println(err)
+		return false, nil
 	}
-	return NotFound{}
+
+	if regex.MatchString(p) {
+		m := regex.FindAllStringSubmatch(p, -1)
+		return true, m
+	}
+
+	return false, nil
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func Router(p string) Resource {
+	if ok, m := MatchRoute("/greetings/?([0-9]{0,12})?", p); ok {
+		if len(m) == 0 || len(m[0]) <= 1 {
+			return &Greeting{}
+		}
+		return &Greeting{
+			Id: m[0][1],
+		}
+	}
+	return &NotFound{}
+}
+
+func Handler(w http.ResponseWriter, r *http.Request) {
+
+	statusCode := 405 // Method not allowed
+	response := "Method not allowed"
 
 	r.ParseForm()
 
-	// fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+	p := r.URL.Path
 
-	// Retrieve method
-	method := r.Method
-	fmt.Println("method:", method)
-
-	// Parse path
-	path := r.URL.Path
-	fmt.Println("path:", path)
-
-	// Parse params from Query string
-	r.ParseForm()
-	params := r.Form // type: url.Values
-
-	fmt.Println("params:", params)
-
-	var statusCode int
-	var resp string
-
-	switch method {
+	switch r.Method {
 	case "GET":
-		statusCode, resp = route(path).Get()
+		statusCode, response = Router(p).Get(r)
+		// case "POST":
+		// 	statusCode, response = Router(p).Post(r)
+		// case "PUT":
+		// 	statusCode, response = Router(p).Put(r)
+		// case "DELETE":
+		// 	statusCode, response = Router(p).Delete(r)
 	}
 
-	switch statusCode {
-	case 404:
-		http.Error(w, resp, 404)
-	}
-	if statusCode == 200 {
-		fmt.Fprintf(w, "%s", resp)
+	if statusCode != 200 {
+		http.Error(w, response, 404)
+	} else {
+		fmt.Fprintf(w, "%s", response)
 	}
 }
 
 func main() {
 	fmt.Println("translation.io is running on http://localhost:8080")
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", Handler)
 	http.ListenAndServe(":8080", nil)
 }
