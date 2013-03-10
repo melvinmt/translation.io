@@ -21,7 +21,7 @@ func Router(path string) rest.Resource {
 
 func main() {
 	api := &rest.API{
-		Router:  Router,
+		Router:  Router, // extends rest.Router()
 		Handler: rest.Handler,
 	}
 
