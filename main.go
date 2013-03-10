@@ -89,11 +89,10 @@ func Router(path string) Resource {
 
 func Handler(w http.ResponseWriter, req *http.Request) {
 
-	var response APIResponse
+	var resp APIResponse
 
 	statusCode := 405 // Method not allowed
-
-	response = APIError{
+	resp = &APIError{
 		Type:    "invalid-method",
 		Message: "Sorry, this method is not allowed.",
 		Code:    405,
@@ -107,7 +106,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Method {
 	case "GET":
-		statusCode, response = Router(path).Get(values)
+		statusCode, resp = Router(path).Get(values)
 		// case "POST":
 		// 	statusCode, body = Router(p).Post(req)
 		// case "PUT":
@@ -117,9 +116,9 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if statusCode != 200 {
-		http.Error(w, response.ToJSON(), 404)
+		http.Error(w, resp.ToJSON(), 404)
 	} else {
-		fmt.Fprintf(w, "%s", response.ToJSON())
+		fmt.Fprintf(w, "%s", resp.ToJSON())
 	}
 }
 
