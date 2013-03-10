@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/melvinmt/rest"
 	"net/url"
 )
 
@@ -12,10 +13,10 @@ type Strings struct {
 
 // Implements APIResponse interface
 func (s *Strings) ToJSON() string {
-	return ParseAPIResponse(s)
+	return rest.ParseAPIResponse(s)
 }
 
-func (s *Strings) Get(v *url.Values) (int, APIResponse) {
+func (s *Strings) Get(v *url.Values) (int, rest.APIResponse) {
 
 	return 200, s
 }
@@ -29,13 +30,13 @@ func (s *Strings) Get(v *url.Values) (int, APIResponse) {
  * - origin_lang: The originating language for the string that is being inserted.
  *                Can only be "en-us" at the moment.
  */
-func (s *Strings) Post(v *url.Values) (int, APIResponse) {
+func (s *Strings) Post(v *url.Values) (int, rest.APIResponse) {
 	str := v.Get("string")
 	lang := v.Get("origin_lang")
 
 	// Validate string
 	if str == "" {
-		return 422, &APIError{
+		return 422, &rest.APIError{
 			Type:    "invalid-string",
 			Message: "A non-empty string is required.",
 			Code:    422,
@@ -45,7 +46,7 @@ func (s *Strings) Post(v *url.Values) (int, APIResponse) {
 
 	// Validate origin lang
 	if lang != "en-us" {
-		return 422, &APIError{
+		return 422, &rest.APIError{
 			Type:    "invalid-origin-lang",
 			Message: "Origin language can only be 'en-us' at the moment.",
 			Code:    422,
@@ -60,8 +61,8 @@ func (s *Strings) Post(v *url.Values) (int, APIResponse) {
 	return 200, s
 }
 
-func (s *Strings) Put(v *url.Values) (int, APIResponse) {
-	return 405, &APIError{
+func (s *Strings) Put(v *url.Values) (int, rest.APIResponse) {
+	return 405, &rest.APIError{
 		Type:    "invalid-method",
 		Message: "This method is not allowed, use POST instead.",
 		Code:    405,
@@ -69,6 +70,6 @@ func (s *Strings) Put(v *url.Values) (int, APIResponse) {
 	}
 }
 
-func (s *Strings) Delete(v *url.Values) (int, APIResponse) {
+func (s *Strings) Delete(v *url.Values) (int, rest.APIResponse) {
 	return 200, s
 }
