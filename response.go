@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"net/url"
 )
 
 // All API Responses (including entities) must implement this interface
@@ -47,6 +48,24 @@ func ServerError() *APIError {
 		Code:    500,
 		Param:   []string{},
 	}
+}
+
+type NotFound struct{}
+
+func (n *NotFound) Get(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
+}
+
+func (n *NotFound) Post(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
+}
+
+func (n *NotFound) Put(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
+}
+
+func (n *NotFound) Delete(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
 }
 
 // Default Not Found Error (when things can't be found)

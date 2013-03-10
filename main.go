@@ -14,52 +14,6 @@ type Resource interface {
 	Delete(*url.Values) (int, APIResponse)
 }
 
-type Greeting struct {
-	Id string
-}
-
-func (g *Greeting) Get(v *url.Values) (int, APIResponse) {
-	return 200, &APISuccess{
-		"response": "hello" + g.Id,
-	}
-}
-
-func (g *Greeting) Post(v *url.Values) (int, APIResponse) {
-	return 200, &APISuccess{
-		"response": "hello" + g.Id,
-	}
-}
-
-func (g *Greeting) Put(v *url.Values) (int, APIResponse) {
-	return 200, &APISuccess{
-		"response": "hello" + g.Id,
-	}
-}
-
-func (g *Greeting) Delete(v *url.Values) (int, APIResponse) {
-	return 200, &APISuccess{
-		"response": "hello" + g.Id,
-	}
-}
-
-type NotFound struct{}
-
-func (n *NotFound) Get(v *url.Values) (int, APIResponse) {
-	return 404, NotFoundError()
-}
-
-func (n *NotFound) Post(v *url.Values) (int, APIResponse) {
-	return 404, NotFoundError()
-}
-
-func (n *NotFound) Put(v *url.Values) (int, APIResponse) {
-	return 404, NotFoundError()
-}
-
-func (n *NotFound) Delete(v *url.Values) (int, APIResponse) {
-	return 404, NotFoundError()
-}
-
 func MatchRoute(r string, p string) (bool, []string) {
 	regex, err := regexp.Compile(r)
 	if err != nil {
@@ -76,11 +30,11 @@ func MatchRoute(r string, p string) (bool, []string) {
 }
 
 func Router(path string) Resource {
-	if ok, vars := MatchRoute("/greetings/?([a-zA-Z0-9]{0,12})?", path); ok {
+	if ok, vars := MatchRoute("/strings/?([a-zA-Z0-9]{0,12})?", path); ok {
 		if len(vars[0]) <= 1 {
-			return &Greeting{}
+			return &Strings{}
 		}
-		return &Greeting{
+		return &Strings{
 			Id: vars[1],
 		}
 	}
