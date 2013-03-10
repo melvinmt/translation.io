@@ -8,6 +8,9 @@ import (
 
 type Resource interface {
 	Get(*http.Request) (int, string)
+	Post(*http.Request) (int, string)
+	Put(*http.Request) (int, string)
+	Delete(*http.Request) (int, string)
 }
 
 type Greeting struct {
@@ -18,13 +21,37 @@ func (g *Greeting) Get(r *http.Request) (int, string) {
 	return 200, "hello " + g.Id
 }
 
+func (g *Greeting) Post(r *http.Request) (int, string) {
+	return 200, "hello " + g.Id
+}
+
+func (g *Greeting) Put(r *http.Request) (int, string) {
+	return 200, "hello " + g.Id
+}
+
+func (g *Greeting) Delete(r *http.Request) (int, string) {
+	return 200, "hello " + g.Id
+}
+
 type NotFound struct{}
 
 func (n *NotFound) Get(r *http.Request) (int, string) {
 	return 404, "not found"
 }
 
-func MatchRoute(r string, p string) (bool, [][]string) {
+func (n *NotFound) Post(r *http.Request) (int, string) {
+	return 404, "not found"
+}
+
+func (n *NotFound) Put(r *http.Request) (int, string) {
+	return 404, "not found"
+}
+
+func (n *NotFound) Delete(r *http.Request) (int, string) {
+	return 404, "not found"
+}
+
+func MatchRoute(r string, p string) (bool, []string) {
 	regex, err := regexp.Compile(r)
 	if err != nil {
 		fmt.Println(err)
@@ -32,49 +59,49 @@ func MatchRoute(r string, p string) (bool, [][]string) {
 	}
 
 	if regex.MatchString(p) {
-		m := regex.FindAllStringSubmatch(p, -1)
+		m := regex.FindStringSubmatch(p)
 		return true, m
 	}
 
 	return false, nil
 }
 
-func Router(p string) Resource {
-	if ok, m := MatchRoute("/greetings/?([0-9]{0,12})?", p); ok {
-		if len(m) == 0 || len(m[0]) <= 1 {
+func Router(path string) Resource {
+	if ok, vars := MatchRoute("/greetings/?([a-zA-Z0-9]{0,12})?", path); ok {
+		if len(vars[0]) <= 1 {
 			return &Greeting{}
 		}
 		return &Greeting{
-			Id: m[0][1],
+			Id: vars[1],
 		}
 	}
 	return &NotFound{}
 }
 
-func Handler(w http.ResponseWriter, r *http.Request) {
+func Handler(w http.ResponseWriter, req *http.Request) {
 
 	statusCode := 405 // Method not allowed
-	response := "Method not allowed"
+	body := "Method not allowed"
 
-	r.ParseForm()
+	req.ParseForm()
 
-	p := r.URL.Path
+	path := req.URL.Path
 
-	switch r.Method {
+	switch req.Method {
 	case "GET":
-		statusCode, response = Router(p).Get(r)
+		statusCode, body = Router(path).Get(req)
 		// case "POST":
-		// 	statusCode, response = Router(p).Post(r)
+		// 	statusCode, body = Router(p).Post(req)
 		// case "PUT":
-		// 	statusCode, response = Router(p).Put(r)
+		// 	statusCode, body = Router(p).Put(req)
 		// case "DELETE":
-		// 	statusCode, response = Router(p).Delete(r)
+		// 	statusCode, body = Router(p).Delete(req)
 	}
 
 	if statusCode != 200 {
-		http.Error(w, response, 404)
+		http.Error(w, body, 404)
 	} else {
-		fmt.Fprintf(w, "%s", response)
+		fmt.Fprintf(w, "%s", body)
 	}
 }
 
