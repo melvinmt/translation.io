@@ -3,52 +3,61 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 )
 
 type Resource interface {
-	Get(*http.Request) (int, string)
-	Post(*http.Request) (int, string)
-	Put(*http.Request) (int, string)
-	Delete(*http.Request) (int, string)
+	Get(*url.Values) (int, APIResponse)
+	Post(*url.Values) (int, APIResponse)
+	Put(*url.Values) (int, APIResponse)
+	Delete(*url.Values) (int, APIResponse)
 }
 
 type Greeting struct {
 	Id string
 }
 
-func (g *Greeting) Get(r *http.Request) (int, string) {
-	return 200, "hello " + g.Id
+func (g *Greeting) Get(v *url.Values) (int, APIResponse) {
+	return 200, &APISuccess{
+		"response": "hello" + g.Id,
+	}
 }
 
-func (g *Greeting) Post(r *http.Request) (int, string) {
-	return 200, "hello " + g.Id
+func (g *Greeting) Post(v *url.Values) (int, APIResponse) {
+	return 200, &APISuccess{
+		"response": "hello" + g.Id,
+	}
 }
 
-func (g *Greeting) Put(r *http.Request) (int, string) {
-	return 200, "hello " + g.Id
+func (g *Greeting) Put(v *url.Values) (int, APIResponse) {
+	return 200, &APISuccess{
+		"response": "hello" + g.Id,
+	}
 }
 
-func (g *Greeting) Delete(r *http.Request) (int, string) {
-	return 200, "hello " + g.Id
+func (g *Greeting) Delete(v *url.Values) (int, APIResponse) {
+	return 200, &APISuccess{
+		"response": "hello" + g.Id,
+	}
 }
 
 type NotFound struct{}
 
-func (n *NotFound) Get(r *http.Request) (int, string) {
-	return 404, "not found"
+func (n *NotFound) Get(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
 }
 
-func (n *NotFound) Post(r *http.Request) (int, string) {
-	return 404, "not found"
+func (n *NotFound) Post(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
 }
 
-func (n *NotFound) Put(r *http.Request) (int, string) {
-	return 404, "not found"
+func (n *NotFound) Put(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
 }
 
-func (n *NotFound) Delete(r *http.Request) (int, string) {
-	return 404, "not found"
+func (n *NotFound) Delete(v *url.Values) (int, APIResponse) {
+	return 404, NotFoundError()
 }
 
 func MatchRoute(r string, p string) (bool, []string) {
@@ -80,16 +89,25 @@ func Router(path string) Resource {
 
 func Handler(w http.ResponseWriter, req *http.Request) {
 
+	var response APIResponse
+
 	statusCode := 405 // Method not allowed
-	body := "Method not allowed"
+
+	response = APIError{
+		Type:    "invalid-method",
+		Message: "Sorry, this method is not allowed.",
+		Code:    405,
+		Param:   []string{},
+	}
 
 	req.ParseForm()
+	values := &req.Form
 
 	path := req.URL.Path
 
 	switch req.Method {
 	case "GET":
-		statusCode, body = Router(path).Get(req)
+		statusCode, response = Router(path).Get(values)
 		// case "POST":
 		// 	statusCode, body = Router(p).Post(req)
 		// case "PUT":
@@ -99,9 +117,9 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if statusCode != 200 {
-		http.Error(w, body, 404)
+		http.Error(w, response.ToJSON(), 404)
 	} else {
-		fmt.Fprintf(w, "%s", body)
+		fmt.Fprintf(w, "%s", response.ToJSON())
 	}
 }
 

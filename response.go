@@ -17,14 +17,14 @@ type APIError struct {
 	Param   []string
 }
 
-func (e *APIError) ToJSON() string {
+func (e APIError) ToJSON() string {
 	return ParseAPIResponse(e)
 }
 
 // Generic Success APIResponse (e.g. when no entities are involved)
 type APISuccess map[string]interface{}
 
-func (s *APISuccess) ToJSON() string {
+func (s APISuccess) ToJSON() string {
 	return ParseAPIResponse(s)
 }
 
@@ -40,11 +40,21 @@ func ParseAPIResponse(i interface{}) string {
 }
 
 // Default Server Error (when unexpected things go wrong)
-func ServerError() APIError {
+func ServerError() *APIError {
 	return &APIError{
 		Type:    "server-error",
 		Message: "This response could not be processed at this time.",
 		Code:    500,
+		Param:   []string{},
+	}
+}
+
+// Default Not Found Error (when things can't be found)
+func NotFoundError() *APIError {
+	return &APIError{
+		Type:    "not-found",
+		Message: "This resource was not found.",
+		Code:    404,
 		Param:   []string{},
 	}
 }
