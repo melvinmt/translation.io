@@ -1,5 +1,3 @@
 .DS_Store
-# keep config safe
 config.go
-#ignore binary files
 translation.io 
