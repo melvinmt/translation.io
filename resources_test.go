@@ -9,7 +9,7 @@ func TestCollections(t *testing.T) {
 	c := &Collection{}
 
 	v := &url.Values{}
-	v.Set("name", "Test Collection")
+	v.Set("name", "Hi bebe!")
 
 	t.Log("POST Collection")
 	status, res := c.Post(v)

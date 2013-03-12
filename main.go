@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"labix.org/v2/mgo/bson"
 	"net/http"
 	"runtime"
 	"translation.io/rest"
@@ -13,18 +14,26 @@ import (
 func Router(path string) rest.Resource {
 	if match, _ := rest.MatchRoute("/strings/?", path); match {
 		return &String{}
-	} else if match, params := rest.MatchRoute("/strings/([a-zA-Z0-9]{0,12})", path); match {
+	} else if match, params := rest.MatchRoute("/strings/([a-z0-9]+)", path); match {
 		return &String{
 			Id: params[1],
 		}
-	} else if match, params := rest.MatchRoute("/strings/([a-zA-Z0-9]{0,12})/translations/?", path); match {
+	} else if match, params := rest.MatchRoute("/strings/([a-z0-9]+)/translations/?", path); match {
 		return &Translations{
 			StringId: params[1],
 		}
-	} else if match, params := rest.MatchRoute("/strings/([0-9]{0,12})/translations/([a-z]{2}(-[a-z]{2})?)", path); match {
+	} else if match, params := rest.MatchRoute("/strings/([a-z0-9]+)/translations/([a-z]{2}(-[a-z]{2})?)", path); match {
 		return &Translations{
 			StringId:   params[1],
 			TargetLang: params[2],
+		}
+	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
+		if bson.IsObjectIdHex(params[1]) {
+			return &Collection{
+				Id: bson.ObjectIdHex(params[1]),
+			}
+		} else {
+			return &rest.NotFound{}
 		}
 	} else if match, _ := rest.MatchRoute("/collections/?", path); match {
 		return &Collection{}

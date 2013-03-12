@@ -37,8 +37,7 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 			fmt.Println("GET /collections - Collection Query Error")
 			return 500, rest.ServerError()
 		}
-
-		return 200, &rest.APISuccess{"collections": cs}
+		return 200, &rest.APISuccess{"Collections": cs}
 	} else {
 		// return single collection
 		err = C.FindId(c.Id).One(&c)
@@ -49,7 +48,7 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 		if err == mgo.ErrNotFound {
 			return 404, rest.NotFoundError()
 		}
-		return 200, &rest.APISuccess{"collection": c}
+		return 200, &rest.APISuccess{"Collection": c}
 	}
 	return 404, rest.NotFoundError()
 }
@@ -82,7 +81,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 		return 5002, rest.ServerError()
 	}
 	if c.Name != "" {
-		return 200, &rest.APISuccess{"collection": c}
+		return 200, &rest.APISuccess{"Collection": c}
 	}
 
 	// insert new collection into DB
@@ -95,7 +94,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 		return 5003, rest.ServerError()
 	}
 
-	return 200, &rest.APISuccess{"collection": c}
+	return 200, &rest.APISuccess{"Collection": c}
 
 }
 
