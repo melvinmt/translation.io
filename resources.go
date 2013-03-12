@@ -74,7 +74,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("POST /collections - DB Connection Error")
-		return 501, rest.ServerError()
+		return 5001, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
 	defer session.Close()
@@ -83,15 +83,21 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	err = C.Find(bson.M{"name": name}).One(&c)
 	if err != nil && err != mgo.ErrNotFound {
 		fmt.Println("POST /collections - Collection Query Error")
-		return 502, rest.ServerError()
+		return 5002, rest.ServerError()
 	}
 	if c.Name != "" {
 		return 200, c
 	}
 
 	// insert new collection into DB
+	c.Id = bson.NewObjectId()
 	c.Name = name
-	C.Insert(c)
+	err = C.Insert(c)
+	if err != nil {
+		fmt.Println("POST /collections - Collection Insert Error")
+		panic(err)
+		return 5003, rest.ServerError()
+	}
 
 	return 200, c
 
