@@ -14,13 +14,9 @@ type Collection struct {
 	Id   bson.ObjectId "_id"
 	Name string
 }
-type Collections []Collection
 
 // Implements APIResponse interface
 func (c *Collection) ToJSON() string {
-	return rest.ParseAPIResponse(c)
-}
-func (c *Collections) ToJSON() string {
 	return rest.ParseAPIResponse(c)
 }
 
@@ -33,7 +29,7 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 	C := session.DB("transio").C("collections")
 	defer session.Close()
 
-	cs := Collections{}
+	cs := []Collection{}
 	if !c.Id.Valid() {
 		// Id is not defined, return all collections
 		err = C.Find(bson.M{}).All(&cs) // <-- potential performance problem!
@@ -42,18 +38,18 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 			return 500, rest.ServerError()
 		}
 
-		return 200, &cs
+		return 200, &rest.APISuccess{"collections": cs}
 	} else {
 		// return single collection
-		err = C.FindId(c.Id).All(&cs)
-		if err != nil {
+		err = C.FindId(c.Id).One(&c)
+		if err != nil && err != mgo.ErrNotFound {
 			fmt.Println("GET /collections - Collection Query Error")
 			return 500, rest.ServerError()
 		}
-		if len(cs) == 0 {
+		if err == mgo.ErrNotFound {
 			return 404, rest.NotFoundError()
 		}
-		return 200, c
+		return 200, &rest.APISuccess{"collection": c}
 	}
 	return 404, rest.NotFoundError()
 }
@@ -86,7 +82,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 		return 5002, rest.ServerError()
 	}
 	if c.Name != "" {
-		return 200, c
+		return 200, &rest.APISuccess{"collection": c}
 	}
 
 	// insert new collection into DB
@@ -99,7 +95,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 		return 5003, rest.ServerError()
 	}
 
-	return 200, c
+	return 200, &rest.APISuccess{"collection": c}
 
 }
 
