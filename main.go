@@ -84,7 +84,7 @@ func APIHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Return response
 	if statusCode != 200 {
-		http.Error(w, response.ToJSON(), 404)
+		http.Error(w, response.ToJSON(), statusCode)
 	} else {
 		fmt.Fprintf(w, "%s", response.ToJSON())
 	}

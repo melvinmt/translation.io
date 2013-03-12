@@ -42,7 +42,7 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 		// return single collection
 		err = C.FindId(c.Id).One(&c)
 		if err != nil && err != mgo.ErrNotFound {
-			fmt.Println("GET /collections - Collection Query Error")
+			fmt.Println("GET /collections/" + c.Id.String() + " - Collection Query Error")
 			return 500, rest.ServerError()
 		}
 		if err == mgo.ErrNotFound {
@@ -90,7 +90,6 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	err = C.Insert(c)
 	if err != nil {
 		fmt.Println("POST /collections - Collection Insert Error")
-		panic(err)
 		return 5003, rest.ServerError()
 	}
 
@@ -99,21 +98,50 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 }
 
 func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
-	// newName := v.Get("name")
+	newName := v.Get("name")
 
-	// session, err := mgo.Dial("127.0.0.1")
-	// if err != nil {
-	// 	fmt.Println("PUT /collections/" + c.Id.String() + " - DB Connection Error")
-	// 	return 500, rest.ServerError()
-	// }
-	// C := session.DB("transio").C("collections")
-	// defer session.Close()
+	if !c.Id.Valid() {
+		return 404, rest.NotFoundError()
+	}
 
-	return 200, c
+	session, err := mgo.Dial("127.0.0.1")
+	if err != nil {
+		fmt.Println("PUT /collections/" + c.Id.String() + " - DB Connection Error")
+		return 500, rest.ServerError()
+	}
+	C := session.DB("transio").C("collections")
+	defer session.Close()
+
+	// update Colletion
+	c.Name = newName
+	err = C.UpdateId(c.Id, c)
+	if err != nil && err != mgo.ErrNotFound {
+		fmt.Println("POST /collections - Collection Query Error")
+		return 500, rest.ServerError()
+	}
+	if err == mgo.ErrNotFound {
+		return 404, rest.NotFoundError()
+	}
+
+	return 200, &rest.APISuccess{"Collection": c}
 }
 
 func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
-	return 200, c
+	session, err := mgo.Dial("127.0.0.1")
+	if err != nil {
+		fmt.Println("DELETE /collections/" + c.Id.String() + " - DB Connection Error")
+		return 500, rest.ServerError()
+	}
+	C := session.DB("transio").C("collections")
+	defer session.Close()
+
+	// remove Collection
+	err = C.RemoveId(c.Id)
+	if err != nil && err != mgo.ErrNotFound {
+		fmt.Println("DELETE /collections/" + c.Id.String() + " - Delete Collection Error")
+		return 500, rest.ServerError()
+	}
+	return 200, &rest.APISuccess{"Deleted": true}
 }
 
 type String struct {
