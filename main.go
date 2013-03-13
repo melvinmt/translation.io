@@ -15,15 +15,18 @@ var mongoPath string
 
 // The Router method routes requests to the appropriate Resource
 func Router(path string) rest.Resource {
-	if match, params := rest.MatchRoute("/collections/([a-z0-9]+)/strings", path); match {
+	if match, params := rest.MatchRoute("/collections/([a-z0-9]+)/strings/?([a-z0-9]+)?/?", path); match {
 		if bson.IsObjectIdHex(params[1]) {
 			cs := &CollectionStrings{}
 			cs.Collection.Id = bson.ObjectIdHex(params[1])
+			if len(params) > 1 && bson.IsObjectIdHex(params[2]) {
+				cs.String.Id = bson.ObjectIdHex(params[2])
+			}
 			return cs
 		} else {
 			return &rest.NotFound{}
 		}
-	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
+	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)/?", path); match {
 		if bson.IsObjectIdHex(params[1]) {
 			return &Collection{
 				Id: bson.ObjectIdHex(params[1]),

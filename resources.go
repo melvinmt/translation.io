@@ -23,12 +23,10 @@ type Collection struct {
 type String struct {
 	Id           bson.ObjectId "_id"
 	String       string
-	Translations []Translation
+	Translations map[string]string
 }
 
 type Translation struct {
-	Id          bson.ObjectId "_id"
-	StringId    bson.ObjectId
 	Language    string
 	Translation string
 }
@@ -68,9 +66,11 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 		return 200, &rest.APISuccess{
 			"Collection": c,
 			"Next": &[]rest.Rel{
-				rest.Rel{"GET": "/collections/" + c.Id.String()},
-				rest.Rel{"PUT": "/collections/" + c.Id.String()},
-				rest.Rel{"DELETE": "/collections/" + c.Id.String()},
+				rest.Rel{"GET": "/collections/" + c.Id.Hex()},
+				rest.Rel{"PUT": "/collections/" + c.Id.Hex()},
+				rest.Rel{"DELETE": "/collections/" + c.Id.Hex()},
+				rest.Rel{"POST": "/collections/" + c.Id.Hex() + "/strings"},
+				rest.Rel{"DELETE": "/collections/" + c.Id.Hex() + "/strings/{StringId}"},
 			},
 		}
 	}
@@ -102,15 +102,6 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	C := session.DB("transio").C("collections")
 	defer session.Close()
 
-	// Check if Collection already exists
-	err = C.Find(bson.M{"Name": name}).One(&c)
-	if err != nil && err != mgo.ErrNotFound {
-		return 500, rest.ServerError()
-	}
-	if c.Name != "" {
-		return 200, &rest.APISuccess{"Collection": c}
-	}
-
 	// Insert new Collection into DB
 	c.Id = bson.NewObjectId()
 	c.Name = name
@@ -133,7 +124,7 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("PUT /collections/" + c.Id.String() + " - DB Connection Error")
+		fmt.Println("PUT /collections/" + c.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
@@ -172,7 +163,7 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("DELETE /collections/" + c.Id.String() + " - DB Connection Error")
+		fmt.Println("DELETE /collections/" + c.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
@@ -181,7 +172,7 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Remove Collection
 	err = C.RemoveId(c.Id)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("DELETE /collections/" + c.Id.String() + " - Delete Collection Error")
+		fmt.Println("DELETE /collections/" + c.Id.Hex() + " - Delete Collection Error")
 		return 500, rest.ServerError()
 	}
 	return 200, &rest.APISuccess{"Success": true}
@@ -199,8 +190,8 @@ func (c *CollectionStrings) ToJSON() string {
 
 func (c *CollectionStrings) Get(v *url.Values) (int, rest.APIResponse) {
 	return 405, rest.InvalidMethodError(&[]rest.Rel{
-		rest.Rel{"POST": "/collections/" + c.Collection.Id.String() + "/strings"},
-		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.String() + "/strings/{StringId}"},
+		rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings"},
+		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.Hex() + "/strings/{StringId}"},
 	})
 }
 
@@ -214,7 +205,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - DB Connection Error")
+		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - DB Connection Error")
 		return 5001, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
@@ -223,7 +214,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	// Find Collection
 	err = C.FindId(c.Collection.Id).One(&c.Collection)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Collection Query Error")
+		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Collection Query Error")
 		return 5002, rest.ServerError()
 	}
 	if err == mgo.ErrNotFound {
@@ -257,26 +248,20 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		}
 	}
 
-	// Search for similar string in DB
-	if s.Id == "" {
-		S := session.DB("transio").C("strings")
+	// Search for same String in DB
+	S := session.DB("transio").C("strings")
+	err = S.Find(bson.M{"string": str}).One(&s)
+	if err != nil && err != mgo.ErrNotFound {
+		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Strings Query Error")
+		return 5003, rest.ServerError()
+	}
 
-		err = S.Find(bson.M{"String": str}).One(&s)
-		if err != nil && err != mgo.ErrNotFound {
-			fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Strings Query Error")
-			return 5003, rest.ServerError()
-		}
+	// Create new String
+	if s.Id == "" {
 
 		// Set string
-		s.String = str
-
-		// Insert new string into strings DB
 		s.Id = bson.NewObjectId()
-		err = S.Insert(s)
-		if err != nil {
-			fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - String Insert Error")
-			return 5004, rest.ServerError()
-		}
+		s.String = str
 
 		// Translate string into x languages!
 		gTranslateUrl := "https://www.googleapis.com/language/translate/v2"
@@ -287,11 +272,21 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 				}
 			}
 		}
+
+		// Create channel
 		ch := make(chan Translation)
+
+		// Loop through languages
 		it := 0
 		for lang := range gLangs {
-			go func(ch chan Translation) {
+
+			// Create a goroutine closure for every translation and collect the results into the channel
+			go func(lang string, ch chan Translation) {
+
+				// Initialize Translation struct t
 				var t Translation
+
+				// Prepare Values for GTranslate API call
 				v := &url.Values{}
 				v.Set("key", os.Getenv("GTRANSLATE_KEY"))
 				v.Set("q", s.String)
@@ -299,59 +294,62 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 				v.Set("target", lang)
 				v.Set("prettyprint", "false")
 
+				// Make GTranslate API Call and unmarshal json response
 				url := gTranslateUrl + "?" + v.Encode()
 				r, err := http.Get(url)
 				if err != nil {
 					ch <- t
-					return
+					return // abort mission
 				}
-
 				body, err := ioutil.ReadAll(r.Body)
 				if err != nil {
 					ch <- t
-					return
+					return // abort mission
 				}
-
-				var T GTranslation
-				err = json.Unmarshal(body, &T)
+				var g GTranslation
+				err = json.Unmarshal(body, &g)
 				if err != nil {
 					ch <- t
-					return
+					return // abort mission
 				}
-
-				if len(T.Data.Translations) > 0 {
+				// If a translation is returned, set values of t
+				if len(g.Data.Translations) > 0 {
 					t = Translation{
-						Id:          bson.NewObjectId(),
-						StringId:    s.Id,
 						Language:    lang,
-						Translation: T.Data.Translations[0].TranslatedText,
+						Translation: g.Data.Translations[0].TranslatedText,
 					}
 				}
+
+				// Return Translation to chan
 				ch <- t
-			}(ch)
+
+			}(lang, ch)
 			it++
 		}
+		s.Translations = make(map[string]string)
+
+		// Wait for the goroutines to finish and save translations into String
 		for i := 0; i < it; i++ {
-			// panic("wtf")
 			translation := <-ch
-			// panic(translation)
 			if translation.Translation != "" {
-				s.Translations = append(s.Translations, translation)
+				s.Translations[translation.Language] = translation.Translation
 			}
 		}
 
-	}
+		// Insert new string into strings DB
+		err = S.Insert(s)
+		if err != nil {
+			fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - String Insert Error")
+			return 5004, rest.ServerError()
+		}
 
-	if s.String == "" {
-		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - String Creation Error")
-		return 5005, rest.ServerError()
 	}
 
 	// Add String to Collection and Update Collection
 	c.Collection.Strings = append(c.Collection.Strings, s)
 	err = C.UpdateId(c.Collection.Id, c.Collection)
 	if err != nil {
-		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Update Collection Error")
+		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Update Collection Error")
 		return 5006, rest.ServerError()
 	}
 
@@ -360,12 +358,37 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 
 func (c *CollectionStrings) Put(v *url.Values) (int, rest.APIResponse) {
 	return 405, rest.InvalidMethodError(&[]rest.Rel{
-		rest.Rel{"POST": "/collections/" + c.Collection.Id.String() + "/strings"},
-		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.String() + "/strings/{StringId}"},
+		rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings"},
+		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.Hex() + "/strings/{StringId}"},
 	})
 }
 
 func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
-	/* TODO: delete string from collection! */
-	return 200, c
+
+	// Initialize DB
+	session, err := mgo.Dial(mongoPath)
+	if err != nil {
+		fmt.Println("DELETE /collections/" + c.Collection.Id.Hex() + "/strings/" + c.String.Id.Hex() + " - DB Connection Error")
+		return 500, rest.ServerError()
+	}
+	C := session.DB("transio").C("collections")
+	defer session.Close()
+
+	// Find collection
+	err = C.FindId(c.Collection.Id).One(&c.Collection)
+	if err != nil && err != mgo.ErrNotFound {
+		return 500, rest.ServerError()
+	}
+	if err == mgo.ErrNotFound {
+		return 404, rest.NotFoundError()
+	}
+
+	// Loop through Strings
+	for i, String := range c.Collection.Strings {
+		if String.Id.Hex() == c.String.Id.Hex() {
+			// Remove string from collection
+			c.Collection.Strings = append(c.Collection.Strings[:i], c.Collection.Strings[i+1:]...)
+		}
+	}
+	return 200, &rest.APISuccess{"Success": true}
 }

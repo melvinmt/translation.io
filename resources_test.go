@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"labix.org/v2/mgo/bson"
 	"net/url"
 	"testing"
 	"translation.io/rest"
@@ -23,7 +22,7 @@ func TestCollections(t *testing.T) {
 	)
 
 	t.Log("POST Collection")
-	name := "Test Collection " + bson.NewObjectId().String() // random title
+	name := "Test Collection " // + bson.NewObjectId().Hex() // random title
 
 	v := &url.Values{}
 	v.Set("name", name)
@@ -50,7 +49,7 @@ func TestCollections(t *testing.T) {
 
 	t.Log("PUT Collection")
 
-	newName := "Updated Collection " + bson.NewObjectId().String() // random title
+	newName := "Updated Collection " // + bson.NewObjectId().Hex() // random title
 
 	v = &url.Values{}
 	v.Set("name", newName)
@@ -65,28 +64,35 @@ func TestCollections(t *testing.T) {
 		t.Errorf("Failed to change name")
 	}
 
-	t.Log("DELETE Collection")
-
-	status, res = c.Delete(&url.Values{})
-	if status != 200 {
-		t.Errorf("Could not DELETE collection, status: '%d'", status)
-		t.Log(res.ToJSON())
-	}
-
-}
-
-func TestStrings(t *testing.T) {
-
+	t.Log("POST string to Collection")
 	cs := &CollectionStrings{}
-	cs.Collection.Id = bson.ObjectIdHex("513edd375a8c9b2fed000001")
-	str := "Welcome friend! " + bson.NewObjectId().String()
+	cs.Collection.Id = c.Id
+	str := "Welcome my friend! " // + bson.NewObjectId().Hex()
 
-	v := &url.Values{}
+	v = &url.Values{}
 	v.Set("string", str)
 
-	status, res := cs.Post(v)
+	status, res = cs.Post(v)
 	if status != 200 {
 		t.Errorf("Could not POST to CollectionStrings, status: %d", status)
 		t.Log(res.ToJSON())
 	}
+
+	t.Log("DELETE string from Collection")
+	c1 := len(cs.Collection.Strings)
+	cs.String.Id = cs.Collection.Strings[0].Id
+	cs.Delete(&url.Values{})
+	c2 := len(cs.Collection.Strings)
+	if c2 >= c1 {
+		t.Errorf("String was not deleted from Collection!")
+	}
+
+	// t.Log("DELETE Collection")
+
+	// status, res = c.Delete(&url.Values{})
+	// if status != 200 {
+	// 	t.Errorf("Could not DELETE collection, status: '%d'", status)
+	// 	t.Log(res.ToJSON())
+	// }
+
 }
