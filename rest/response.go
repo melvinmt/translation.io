@@ -30,13 +30,17 @@ type APIResponse interface {
 
 type Rel map[string]string
 
-// Strict Error APIResponse
-type APIError struct {
+type ErrorMsg struct {
 	Type    string
 	Message string
 	Code    int
 	Param   []string
 	Allowed *[]Rel
+}
+
+// Strict Error APIResponse
+type APIError struct {
+	Error ErrorMsg
 }
 
 func (e APIError) ToJSON() string {
@@ -64,10 +68,12 @@ func ParseAPIResponse(i interface{}) string {
 // Default Server Error (when unexpected things go wrong)
 func ServerError() *APIError {
 	return &APIError{
-		Type:    "server-error",
-		Message: "This response could not be processed at this time.",
-		Code:    500,
-		Param:   []string{},
+		Error: ErrorMsg{
+			Type:    "server-error",
+			Message: "This response could not be processed at this time.",
+			Code:    500,
+			Param:   []string{},
+		},
 	}
 }
 
@@ -92,20 +98,24 @@ func (n *NotFound) Delete(v *url.Values) (int, APIResponse) {
 // Default Not Found Error (when things can't be found)
 func NotFoundError() *APIError {
 	return &APIError{
-		Type:    "not-found",
-		Message: "This resource was not found.",
-		Code:    404,
-		Param:   []string{},
+		Error: ErrorMsg{
+			Type:    "not-found",
+			Message: "This resource was not found.",
+			Code:    404,
+			Param:   []string{},
+		},
 	}
 }
 
 // Default Not Found Error (when things can't be found)
 func InvalidMethodError(rel *[]Rel) *APIError {
 	return &APIError{
-		Type:    "invalid-method",
-		Message: "Sorry, this method is not allowed.",
-		Code:    405,
-		Param:   []string{},
-		Allowed: rel,
+		Error: ErrorMsg{
+			Type:    "invalid-method",
+			Message: "Sorry, this method is not allowed.",
+			Code:    405,
+			Param:   []string{},
+			Allowed: rel,
+		},
 	}
 }

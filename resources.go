@@ -81,10 +81,12 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	name := v.Get("name")
 	if name == "" {
 		return 422, &rest.APIError{
-			Type:    "invalid-name",
-			Message: "A non-empty name is required.",
-			Code:    422,
-			Param:   []string{"name"},
+			rest.Error: rest.ErrorMsg{
+				Type:    "invalid-name",
+				Message: "A non-empty name is required.",
+				Code:    422,
+				Param:   []string{"name"},
+			},
 		}
 	}
 
@@ -137,10 +139,12 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	newName := v.Get("name")
 	if newName == "" {
 		return 422, &rest.APIError{
-			Type:    "invalid-name",
-			Message: "A non-empty name is required.",
-			Code:    422,
-			Param:   []string{"name"},
+			rest.Error: rest.ErrorMsg{
+				Type:    "invalid-name",
+				Message: "A non-empty name is required.",
+				Code:    422,
+				Param:   []string{"name"},
+			},
 		}
 	}
 
@@ -225,10 +229,12 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	str := v.Get("string")
 	if str == "" {
 		return 422, &rest.APIError{
-			Type:    "invalid-string",
-			Message: "A non-empty string is required.",
-			Code:    422,
-			Param:   []string{"string"},
+			rest.Error: rest.ErrorMsg{
+				Type:    "invalid-string",
+				Message: "A non-empty string is required.",
+				Code:    422,
+				Param:   []string{"string"},
+			},
 		}
 	}
 
