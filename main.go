@@ -82,5 +82,5 @@ func main() {
 
 	fmt.Println("translation.io is running on http://localhost:8080")
 	http.HandleFunc("/", APIHandler)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":41433", nil)
 }
