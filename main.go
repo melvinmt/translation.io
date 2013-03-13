@@ -81,7 +81,7 @@ func APIHandler(w http.ResponseWriter, req *http.Request) {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	fmt.Println("translation.io is running on http://localhost:41433")
+	fmt.Println("translation.io is running on http://localhost:" + os.Getenv("PORT"))
 	http.HandleFunc("/", APIHandler)
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
