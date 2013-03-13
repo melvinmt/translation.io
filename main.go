@@ -12,22 +12,7 @@ import (
 
 // The Router method routes requests to the appropriate Resource
 func Router(path string) rest.Resource {
-	if match, _ := rest.MatchRoute("/strings/?", path); match {
-		return &String{}
-	} else if match, params := rest.MatchRoute("/strings/([a-z0-9]+)", path); match {
-		return &String{
-			Id: params[1],
-		}
-	} else if match, params := rest.MatchRoute("/strings/([a-z0-9]+)/translations/?", path); match {
-		return &Translations{
-			StringId: params[1],
-		}
-	} else if match, params := rest.MatchRoute("/strings/([a-z0-9]+)/translations/([a-z]{2}(-[a-z]{2})?)", path); match {
-		return &Translations{
-			StringId:   params[1],
-			TargetLang: params[2],
-		}
-	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
+	if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
 		if bson.IsObjectIdHex(params[1]) {
 			return &Collection{
 				Id: bson.ObjectIdHex(params[1]),

@@ -7,10 +7,13 @@ get /collections/{COLLECTION_ID}
 put /collections/{COLLECTION_ID}
 delete /collections/{COLLECTION_ID}
 
-get /collections/{COLLECTION_ID}/strings
 post /collections/{COLLECTION_ID}/strings
-
 delete /collections/{COLLECTION_ID}/strings/{STRING_ID}
+
+
+
+
+
 
 get /collections/{COLLECTION_ID}/translations
 
@@ -27,17 +30,12 @@ DB:
 collections {
 	id
 	title
-}
-
-collections_of_strings {
-	id
-	collection_id
-	string_id
+	strings
 }
 
 strings {
 	id
-	string
+	str
 	origin_lang
 }
 

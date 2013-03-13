@@ -11,8 +11,22 @@ import (
 )
 
 type Collection struct {
-	Id   bson.ObjectId "_id"
-	Name string
+	Id      bson.ObjectId "_id"
+	Name    string
+	Strings []String
+}
+
+type String struct {
+	Id           bson.ObjectId "_id"
+	String       string
+	Translations []Translation
+}
+
+type Translation struct {
+	Id          bson.ObjectId "_id"
+	StringId    bson.ObjectId
+	Language    string
+	Translation string
 }
 
 // Implements APIResponse interface
@@ -21,28 +35,27 @@ func (c *Collection) ToJSON() string {
 }
 
 func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
+
+	// Initialize DB
 	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
-		fmt.Println("GET /collections - DB Connection Error")
 		return 500, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
 	defer session.Close()
 
-	cs := []Collection{}
 	if !c.Id.Valid() {
-		// Id is not defined, return all collections
-		err = C.Find(bson.M{}).All(&cs) // <-- potential performance problem!
-		if err != nil {
-			fmt.Println("GET /collections - Collection Query Error")
-			return 500, rest.ServerError()
-		}
-		return 200, &rest.APISuccess{"Collections": cs}
+
+		// GET on /collections (without an ID) is not allowed
+		return 405, rest.InvalidMethodError(&[]rest.Rel{
+			rest.Rel{"POST": "/collections"},
+		})
+
 	} else {
-		// return single collection
+
+		// Return single collection
 		err = C.FindId(c.Id).One(&c)
 		if err != nil && err != mgo.ErrNotFound {
-			fmt.Println("GET /collections/" + c.Id.String() + " - Collection Query Error")
 			return 500, rest.ServerError()
 		}
 		if err == mgo.ErrNotFound {
@@ -57,13 +70,15 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 			},
 		}
 	}
+
+	// Return Not Found Error
 	return 404, rest.NotFoundError()
 }
 
 func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
-	name := v.Get("name")
 
-	// Validate string
+	// Validate Name
+	name := v.Get("name")
 	if name == "" {
 		return 422, &rest.APIError{
 			Type:    "invalid-name",
@@ -73,44 +88,43 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 		}
 	}
 
+	// Initialize DB
 	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
-		fmt.Println("POST /collections - DB Connection Error")
-		return 5001, rest.ServerError()
+		return 500, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
 	defer session.Close()
 
-	// check if collection already exists
-	err = C.Find(bson.M{"name": name}).One(&c)
+	// Check if Collection already exists
+	err = C.Find(bson.M{"Name": name}).One(&c)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("POST /collections - Collection Query Error")
-		return 5002, rest.ServerError()
+		return 500, rest.ServerError()
 	}
 	if c.Name != "" {
 		return 200, &rest.APISuccess{"Collection": c}
 	}
 
-	// insert new collection into DB
+	// Insert new Collection into DB
 	c.Id = bson.NewObjectId()
 	c.Name = name
 	err = C.Insert(c)
 	if err != nil {
-		fmt.Println("POST /collections - Collection Insert Error")
 		return 5003, rest.ServerError()
 	}
 
+	// Return Collection
 	return 200, &rest.APISuccess{"Collection": c}
-
 }
 
 func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
-	newName := v.Get("name")
 
+	// Check Id
 	if !c.Id.Valid() {
 		return 404, rest.NotFoundError()
 	}
 
+	// Initialize DB
 	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("PUT /collections/" + c.Id.String() + " - DB Connection Error")
@@ -119,7 +133,18 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	C := session.DB("transio").C("collections")
 	defer session.Close()
 
-	// update Colletion
+	// Validate Name
+	newName := v.Get("name")
+	if newName == "" {
+		return 422, &rest.APIError{
+			Type:    "invalid-name",
+			Message: "A non-empty name is required.",
+			Code:    422,
+			Param:   []string{"name"},
+		}
+	}
+
+	// Update Collection
 	c.Name = newName
 	err = C.UpdateId(c.Id, c)
 	if err != nil && err != mgo.ErrNotFound {
@@ -130,10 +155,13 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 		return 404, rest.NotFoundError()
 	}
 
+	// Return Collection
 	return 200, &rest.APISuccess{"Collection": c}
 }
 
 func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
+
+	// Initialize DB
 	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("DELETE /collections/" + c.Id.String() + " - DB Connection Error")
@@ -142,27 +170,25 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 	C := session.DB("transio").C("collections")
 	defer session.Close()
 
-	// remove Collection
+	// Remove Collection
 	err = C.RemoveId(c.Id)
 	if err != nil && err != mgo.ErrNotFound {
 		fmt.Println("DELETE /collections/" + c.Id.String() + " - Delete Collection Error")
 		return 500, rest.ServerError()
 	}
-	return 200, &rest.APISuccess{"Deleted": true}
+	return 200, &rest.APISuccess{"Success": true}
 }
 
-type String struct {
-	Id         string
-	String     string
-	OriginLang string
+type CollectionStrings struct {
+	Collection Collection
+	String     String
 }
 
 // Implements APIResponse interface
-func (s *String) ToJSON() string {
-	return rest.ParseAPIResponse(s)
+func (c *CollectionStrings) ToJSON() string {
+	return rest.ParseAPIResponse(c)
 }
 
-func (s *String) Get(v *url.Values) (int, rest.APIResponse) {
 func (c *CollectionStrings) Get(v *url.Values) (int, rest.APIResponse) {
 	return 405, rest.InvalidMethodError(&[]rest.Rel{
 		rest.Rel{"POST": "/collections/" + c.Collection.Id.String() + "/strings"},
@@ -170,39 +196,33 @@ func (c *CollectionStrings) Get(v *url.Values) (int, rest.APIResponse) {
 	})
 }
 
-	// connect with db
-	session, err := mgo.Dial("127.0.0.1")
-	if err != nil {
-		panic(err)
-	}
-	defer session.Close()
-
-	if s.Id == "" {
+func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
+	// Check Id
+	if !c.Collection.Id.Valid() {
 		return 404, rest.NotFoundError()
 	}
 
-	str := &String{
-		Id:         "blabla",
-		String:     "you know",
-		OriginLang: "en-us",
+	// Initialize DB
+	session, err := mgo.Dial("127.0.0.1")
+	if err != nil {
+		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - DB Connection Error")
+		return 500, rest.ServerError()
 	}
-	return 200, str
-}
+	C := session.DB("transio").C("collections")
+	defer session.Close()
 
-/*
- * POST /String
- *
- * Params
- * - string:      An unique string that has to be translated. This POST method is 
- *                idempotent, so no worries when calling this method multiple times.
- * - origin_lang: The originating language for the string that is being inserted.
- *                Can only be "en-us" at the moment.
- */
-func (s *String) Post(v *url.Values) (int, rest.APIResponse) {
-	str := v.Get("string")
-	lang := v.Get("origin_lang")
+	// Find Collection
+	err = C.FindId(c.Collection.Id).One(&c.Collection)
+	if err != nil && err != mgo.ErrNotFound {
+		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Collection Query Error")
+		return 500, rest.ServerError()
+	}
+	if err == mgo.ErrNotFound {
+		return 404, rest.NotFoundError()
+	}
 
 	// Validate string
+	str := v.Get("string")
 	if str == "" {
 		return 422, &rest.APIError{
 			Type:    "invalid-string",
@@ -212,61 +232,49 @@ func (s *String) Post(v *url.Values) (int, rest.APIResponse) {
 		}
 	}
 
-	// Validate origin lang
-	if lang != "en-us" {
-		return 422, &rest.APIError{
-			Type:    "invalid-origin-lang",
-			Message: "Origin language can only be 'en-us' at the moment.",
-			Code:    422,
-			Param:   []string{"origin_lang"},
+	// Init new String struct
+	s := String{}
+
+	// Search for similar string in Collection Strings array (makes "POST" idempotent)
+	if len(c.Collection.Strings) > 0 {
+		for _, Item := range c.Collection.Strings {
+			if Item.String == str {
+				s.Id = Item.Id
+				s.String = str
+				break
+			}
 		}
 	}
 
-	// Search for similar string (makes "POST" idempotent)
+	// Search for similar string in DB
+	if s.Id == "" {
+		S := session.DB("transio").C("strings")
 
-	// Post new string
-	type StringDoc struct {
-		Id bson.ObjectId "_id"
+		err = S.Find(bson.M{"String": str}).One(&s)
+		if err != nil && err != mgo.ErrNotFound {
+			fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Strings Query Error")
+			return 500, rest.ServerError()
+		}
+		if err == mgo.ErrNotFound {
+			return 404, rest.NotFoundError()
+		}
+
+		/* TODO: insert new string into strings DB */
+
+		/* TODO: translate string into x languages! */
 	}
 
-	return 200, s
-}
-
-func (s *String) Put(v *url.Values) (int, rest.APIResponse) {
-	return 405, &rest.APIError{
-		Type:    "invalid-method",
-		Message: "This method is not allowed, use POST instead.",
-		Code:    405,
-		Param:   []string{},
+	// Add String to Collection and Update Collection
+	c.Collection.Strings = append(c.Collection.Strings, s)
+	err = C.Update(c.Collection.Id, c.Collection)
+	if err != nil {
+		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Update Collection Error")
+		return 500, rest.ServerError()
 	}
+
+	return 200, &rest.APISuccess{"Success": true}
 }
 
-func (s *String) Delete(v *url.Values) (int, rest.APIResponse) {
-	return 200, s
-}
-
-type Translations struct {
-	Id          string
-	StringId    string
-	TargetLang  string
-	Translation string
-}
-
-// Implements APIResponse interface
-func (t *Translations) ToJSON() string {
-	return rest.ParseAPIResponse(t)
-}
-
-func (t *Translations) Get(v *url.Values) (int, rest.APIResponse) {
-	return 200, t
-}
-
-func (t *Translations) Post(v *url.Values) (int, rest.APIResponse) {
-	return 200, t
-}
-
-func (t *Translations) Put(v *url.Values) (int, rest.APIResponse) {
-	return 200, t
 func (c *CollectionStrings) Put(v *url.Values) (int, rest.APIResponse) {
 	return 405, rest.InvalidMethodError(&[]rest.Rel{
 		rest.Rel{"POST": "/collections/" + c.Collection.Id.String() + "/strings"},
@@ -274,6 +282,7 @@ func (c *CollectionStrings) Put(v *url.Values) (int, rest.APIResponse) {
 	})
 }
 
-func (t *Translations) Delete(v *url.Values) (int, rest.APIResponse) {
-	return 200, t
+func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
+	/* TODO: delete string from collection! */
+	return 200, c
 }
