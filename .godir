@@ -1,2 +1,1 @@
-echo translation.io >.godir
-echo translation.io/rest >.godir/rest
+echo  >.godir
