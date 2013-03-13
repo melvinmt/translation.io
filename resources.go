@@ -37,7 +37,7 @@ func (c *Collection) ToJSON() string {
 func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 
 	// Initialize DB
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(mongoPath)
 	if err != nil {
 		return 500, rest.ServerError()
 	}
@@ -89,7 +89,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	}
 
 	// Initialize DB
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(mongoPath)
 	if err != nil {
 		return 500, rest.ServerError()
 	}
@@ -125,7 +125,7 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	}
 
 	// Initialize DB
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(mongoPath)
 	if err != nil {
 		fmt.Println("PUT /collections/" + c.Id.String() + " - DB Connection Error")
 		return 500, rest.ServerError()
@@ -162,7 +162,7 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 
 	// Initialize DB
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(mongoPath)
 	if err != nil {
 		fmt.Println("DELETE /collections/" + c.Id.String() + " - DB Connection Error")
 		return 500, rest.ServerError()
@@ -203,7 +203,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	}
 
 	// Initialize DB
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(mongoPath)
 	if err != nil {
 		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - DB Connection Error")
 		return 500, rest.ServerError()

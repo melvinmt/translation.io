@@ -11,6 +11,8 @@ import (
 	"translation.io/rest"
 )
 
+var mongoPath string
+
 // The Router method routes requests to the appropriate Resource
 func Router(path string) rest.Resource {
 	if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
@@ -79,6 +81,13 @@ func APIHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+
+	if os.Getenv("MONGOHQ_URL") != "" {
+		mongoPath = os.Getenv("MONGOHQ_URL")
+	} else {
+		mongoPath = "127.0.0.1"
+	}
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	fmt.Println("translation.io is running on http://localhost:" + os.Getenv("PORT"))
