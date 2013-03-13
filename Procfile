@@ -1,1 +1,1 @@
-web: ./translation.io
+web: translation.io
