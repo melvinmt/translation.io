@@ -10,35 +10,17 @@ import (
 
 func TestCollections(t *testing.T) {
 
-	type List struct {
-		Collections []Collection
-	}
-
 	type Single struct {
 		Collection Collection
 	}
 
 	var (
-		l      List
 		c      Collection
 		status int
 		res    rest.APIResponse
 		p      Single
 		err    error
 	)
-
-	t.Log("GET Collections - first count")
-	// get first count
-	status, res = c.Get(&url.Values{})
-	if status != 200 {
-		t.Errorf("Could not GET collections, status: '%d'", status)
-		t.Log(res.ToJSON())
-	}
-	err = json.Unmarshal([]byte(res.ToJSON()), &l)
-	if err != nil {
-		t.Error(err)
-	}
-	count := len(l.Collections)
 
 	t.Log("POST Collection")
 	name := "Test Collection " + bson.NewObjectId().String() // random title
@@ -63,25 +45,6 @@ func TestCollections(t *testing.T) {
 	status, res = c.Get(&url.Values{})
 	if status != 200 {
 		t.Errorf("Could not GET collection, status: '%d'", status)
-		t.Log(res.ToJSON())
-	}
-
-	t.Log("GET Collections - 2nd count")
-	// get second count
-	c2 := &Collection{}
-	status, res = c2.Get(&url.Values{})
-	if status != 200 {
-		t.Errorf("Could not GET collections, status: '%d'", status)
-		t.Log(res.ToJSON())
-	}
-	l2 := &List{}
-	err = json.Unmarshal([]byte(res.ToJSON()), l2)
-	if err != nil {
-		t.Error(err)
-	}
-	newCount := len(l2.Collections)
-	if newCount <= count {
-		t.Errorf("No new collections were created, count: %d, newCount: %d.", count, newCount)
 		t.Log(res.ToJSON())
 	}
 
@@ -110,4 +73,20 @@ func TestCollections(t *testing.T) {
 		t.Log(res.ToJSON())
 	}
 
+}
+
+func TestStrings(t *testing.T) {
+
+	cs := &CollectionStrings{}
+	cs.Collection.Id = bson.ObjectIdHex("513edd375a8c9b2fed000001")
+	str := "Welcome Stranger! " + bson.NewObjectId().String()
+
+	v := &url.Values{}
+	v.Set("string", str)
+
+	status, res := cs.Post(v)
+	if status != 200 {
+		t.Errorf("Could not POST to CollectionStrings, status: %d", status)
+		t.Log(res.ToJSON())
+	}
 }

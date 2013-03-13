@@ -3,10 +3,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"net/http"
 	"net/url"
+	"os"
 	"translation.io/rest"
 )
 
@@ -201,16 +205,17 @@ func (c *CollectionStrings) Get(v *url.Values) (int, rest.APIResponse) {
 }
 
 func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
+
 	// Check Id
 	if !c.Collection.Id.Valid() {
-		return 404, rest.NotFoundError()
+		return 4041, rest.NotFoundError()
 	}
 
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
 		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - DB Connection Error")
-		return 500, rest.ServerError()
+		return 5001, rest.ServerError()
 	}
 	C := session.DB("transio").C("collections")
 	defer session.Close()
@@ -219,10 +224,10 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	err = C.FindId(c.Collection.Id).One(&c.Collection)
 	if err != nil && err != mgo.ErrNotFound {
 		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Collection Query Error")
-		return 500, rest.ServerError()
+		return 5002, rest.ServerError()
 	}
 	if err == mgo.ErrNotFound {
-		return 404, rest.NotFoundError()
+		return 4042, rest.NotFoundError()
 	}
 
 	// Validate string
@@ -259,23 +264,87 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		err = S.Find(bson.M{"String": str}).One(&s)
 		if err != nil && err != mgo.ErrNotFound {
 			fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Strings Query Error")
-			return 500, rest.ServerError()
-		}
-		if err == mgo.ErrNotFound {
-			return 404, rest.NotFoundError()
+			return 5003, rest.ServerError()
 		}
 
-		/* TODO: insert new string into strings DB */
+		// Set string
+		s.String = str
 
-		/* TODO: translate string into x languages! */
+		// Insert new string into strings DB
+		s.Id = bson.NewObjectId()
+		err = S.Insert(s)
+		if err != nil {
+			fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - String Insert Error")
+			return 5004, rest.ServerError()
+		}
+
+		// Translate string into x languages!
+		gTranslateUrl := "https://www.googleapis.com/language/translate/v2"
+		type GTranslation struct {
+			Data struct {
+				Translations []struct {
+					TranslatedText string
+				}
+			}
+		}
+		ch := make(chan Translation)
+		it := 0
+		for lang := range gLangs {
+			go func(ch chan Translation) {
+				v := &url.Values{}
+				v.Set("key", os.Getenv("GTRANSLATE_KEY"))
+				v.Set("q", s.String)
+				v.Set("source", "en")
+				v.Set("target", lang)
+				v.Set("prettyprint", "false")
+
+				url := gTranslateUrl + "?" + v.Encode()
+				r, err := http.Get(url)
+				if err != nil {
+					return
+				}
+
+				body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					return
+				}
+
+				var T GTranslation
+				err = json.Unmarshal(body, &r)
+				if err != nil {
+					return
+				}
+
+				if len(T.Data.Translations) > 0 {
+					t := Translation{
+						Id:          bson.NewObjectId(),
+						StringId:    s.Id,
+						Language:    lang,
+						Translation: T.Data.Translations[0].TranslatedText,
+					}
+					ch <- t
+				}
+			}(ch)
+			it++
+		}
+		for i := 0; i < it; i++ {
+			translation := <-ch
+			s.Translations = append(s.Translations, translation)
+		}
+
+	}
+
+	if s.String == "" {
+		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - String Creation Error")
+		return 5005, rest.ServerError()
 	}
 
 	// Add String to Collection and Update Collection
 	c.Collection.Strings = append(c.Collection.Strings, s)
-	err = C.Update(c.Collection.Id, c.Collection)
+	err = C.UpdateId(c.Collection.Id, c.Collection)
 	if err != nil {
 		fmt.Println("POST /collections/" + c.Collection.Id.String() + "/strings - Update Collection Error")
-		return 500, rest.ServerError()
+		return 5006, rest.ServerError()
 	}
 
 	return 200, &rest.APISuccess{"Success": true}

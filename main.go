@@ -15,7 +15,15 @@ var mongoPath string
 
 // The Router method routes requests to the appropriate Resource
 func Router(path string) rest.Resource {
-	if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
+	if match, params := rest.MatchRoute("/collections/([a-z0-9]+)/strings", path); match {
+		if bson.IsObjectIdHex(params[1]) {
+			cs := &CollectionStrings{}
+			cs.Collection.Id = bson.ObjectIdHex(params[1])
+			return cs
+		} else {
+			return &rest.NotFound{}
+		}
+	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
 		if bson.IsObjectIdHex(params[1]) {
 			return &Collection{
 				Id: bson.ObjectIdHex(params[1]),
@@ -90,7 +98,13 @@ func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	fmt.Println("translation.io is running on http://localhost:" + os.Getenv("PORT"))
+	var port string
+	if os.Getenv("PRODUCTION") == "true" {
+		port = os.Getenv("PORT")
+	} else {
+		port = "8080"
+	}
+	fmt.Println("translation.io is running on http://localhost:" + port)
 	http.HandleFunc("/", APIHandler)
-	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	http.ListenAndServe(":"+port, nil)
 }
