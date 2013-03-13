@@ -28,12 +28,15 @@ type APIResponse interface {
 	ToJSON() string
 }
 
+type Rel map[string]string
+
 // Strict Error APIResponse
 type APIError struct {
 	Type    string
 	Message string
 	Code    int
 	Param   []string
+	Allowed *[]Rel
 }
 
 func (e APIError) ToJSON() string {
@@ -93,5 +96,16 @@ func NotFoundError() *APIError {
 		Message: "This resource was not found.",
 		Code:    404,
 		Param:   []string{},
+	}
+}
+
+// Default Not Found Error (when things can't be found)
+func InvalidMethodError(rel *[]Rel) *APIError {
+	return &APIError{
+		Type:    "invalid-method",
+		Message: "Sorry, this method is not allowed.",
+		Code:    405,
+		Param:   []string{},
+		Allowed: rel,
 	}
 }

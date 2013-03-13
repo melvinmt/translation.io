@@ -48,7 +48,14 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 		if err == mgo.ErrNotFound {
 			return 404, rest.NotFoundError()
 		}
-		return 200, &rest.APISuccess{"Collection": c}
+		return 200, &rest.APISuccess{
+			"Collection": c,
+			"Next": &[]rest.Rel{
+				rest.Rel{"GET": "/collections/" + c.Id.String()},
+				rest.Rel{"PUT": "/collections/" + c.Id.String()},
+				rest.Rel{"DELETE": "/collections/" + c.Id.String()},
+			},
+		}
 	}
 	return 404, rest.NotFoundError()
 }
@@ -156,6 +163,12 @@ func (s *String) ToJSON() string {
 }
 
 func (s *String) Get(v *url.Values) (int, rest.APIResponse) {
+func (c *CollectionStrings) Get(v *url.Values) (int, rest.APIResponse) {
+	return 405, rest.InvalidMethodError(&[]rest.Rel{
+		rest.Rel{"POST": "/collections/" + c.Collection.Id.String() + "/strings"},
+		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.String() + "/strings/{StringId}"},
+	})
+}
 
 	// connect with db
 	session, err := mgo.Dial("127.0.0.1")
@@ -254,6 +267,11 @@ func (t *Translations) Post(v *url.Values) (int, rest.APIResponse) {
 
 func (t *Translations) Put(v *url.Values) (int, rest.APIResponse) {
 	return 200, t
+func (c *CollectionStrings) Put(v *url.Values) (int, rest.APIResponse) {
+	return 405, rest.InvalidMethodError(&[]rest.Rel{
+		rest.Rel{"POST": "/collections/" + c.Collection.Id.String() + "/strings"},
+		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.String() + "/strings/{StringId}"},
+	})
 }
 
 func (t *Translations) Delete(v *url.Values) (int, rest.APIResponse) {

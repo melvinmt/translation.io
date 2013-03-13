@@ -63,12 +63,14 @@ func APIHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Default error when method is not found
 	statusCode := 405
-	response = &rest.APIError{
-		Type:    "invalid-method",
-		Message: "Sorry, this method is not allowed.",
-		Code:    405,
-		Param:   []string{},
-	}
+	response = rest.InvalidMethodError(&[]rest.Rel{
+		rest.Rel{"POST": "/collections"},
+		rest.Rel{"GET": "/collections/{CollectionId}"},
+		rest.Rel{"PUT": "/collections/{CollectionId}"},
+		rest.Rel{"DELETE": "/collections/{CollectionId}"},
+		rest.Rel{"POST": "/collections/{CollectionId}/strings"},
+		rest.Rel{"DELETE": "/collections/{CollectionId}/strings/{StringId}"},
+	})
 
 	// Retrieve response on allowed methods
 	switch req.Method {
