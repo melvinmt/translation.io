@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"labix.org/v2/mgo/bson"
 	"net/http"
+	"os"
 	"runtime"
 	"translation.io/rest"
 )
@@ -82,5 +83,5 @@ func main() {
 
 	fmt.Println("translation.io is running on http://localhost:41433")
 	http.HandleFunc("/", APIHandler)
-	http.ListenAndServe(":41433", nil)
+	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
