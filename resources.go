@@ -291,6 +291,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		it := 0
 		for lang := range gLangs {
 			go func(ch chan Translation) {
+				var t Translation
 				v := &url.Values{}
 				v.Set("key", os.Getenv("GTRANSLATE_KEY"))
 				v.Set("q", s.String)
@@ -301,35 +302,42 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 				url := gTranslateUrl + "?" + v.Encode()
 				r, err := http.Get(url)
 				if err != nil {
+					ch <- t
 					return
 				}
 
 				body, err := ioutil.ReadAll(r.Body)
 				if err != nil {
+					ch <- t
 					return
 				}
 
 				var T GTranslation
-				err = json.Unmarshal(body, &r)
+				err = json.Unmarshal(body, &T)
 				if err != nil {
+					ch <- t
 					return
 				}
 
 				if len(T.Data.Translations) > 0 {
-					t := Translation{
+					t = Translation{
 						Id:          bson.NewObjectId(),
 						StringId:    s.Id,
 						Language:    lang,
 						Translation: T.Data.Translations[0].TranslatedText,
 					}
-					ch <- t
 				}
+				ch <- t
 			}(ch)
 			it++
 		}
 		for i := 0; i < it; i++ {
+			// panic("wtf")
 			translation := <-ch
-			s.Translations = append(s.Translations, translation)
+			// panic(translation)
+			if translation.Translation != "" {
+				s.Translations = append(s.Translations, translation)
+			}
 		}
 
 	}

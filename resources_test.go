@@ -79,7 +79,7 @@ func TestStrings(t *testing.T) {
 
 	cs := &CollectionStrings{}
 	cs.Collection.Id = bson.ObjectIdHex("513edd375a8c9b2fed000001")
-	str := "Welcome Stranger! " + bson.NewObjectId().String()
+	str := "Welcome friend! " + bson.NewObjectId().String()
 
 	v := &url.Values{}
 	v.Set("string", str)
