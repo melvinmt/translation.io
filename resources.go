@@ -4,7 +4,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -151,7 +150,6 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("PUT /collections/" + c.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
 	C := session.DB(mongoDb).C("collections")
@@ -174,7 +172,6 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	c.Name = newName
 	err = C.UpdateId(c.Id, c)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("POST /collections - Collection Query Error")
 		return 500, rest.ServerError()
 	}
 	if err == mgo.ErrNotFound {
@@ -200,7 +197,6 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("DELETE /collections/" + c.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
 	C := session.DB(mongoDb).C("collections")
@@ -209,7 +205,6 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Remove Collection
 	err = C.RemoveId(c.Id)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("DELETE /collections/" + c.Id.Hex() + " - Delete Collection Error")
 		return 500, rest.ServerError()
 	}
 	return 200, &rest.APISuccess{
@@ -251,7 +246,6 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - DB Connection Error")
 		return 5001, rest.ServerError()
 	}
 	C := session.DB(mongoDb).C("collections")
@@ -260,7 +254,6 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	// Find Collection
 	err = C.FindId(c.Collection.Id).One(&c.Collection)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Collection Query Error")
 		return 5002, rest.ServerError()
 	}
 	if err == mgo.ErrNotFound {
@@ -300,10 +293,9 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	S := session.DB(mongoDb).C("strings")
 	err = S.Find(bson.M{"string": str}).One(&s)
 	if err != nil && err != mgo.ErrNotFound {
-		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Strings Query Error")
 		return 5003, rest.ServerError()
 	}
-	fmt.Println(s.Id.Hex())
+
 	// Create new String
 	if s.Id == "" {
 
@@ -323,16 +315,14 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 
 		// Create channel
 		ch := make(chan Translation)
-		fmt.Println("here2?")
 
 		// Loop through languages
 		it := 0
 		for lang := range gLangs {
-			fmt.Println("here1?")
 
 			// Create a goroutine closure for every translation and collect the results into the channel
 			go func(lang string, ch chan Translation) {
-				fmt.Println("here?")
+
 				// Initialize Translation struct t
 				var t Translation
 
@@ -351,7 +341,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 					ch <- t
 					return // abort mission
 				}
-				fmt.Println("Translate:", url)
+
 				body, err := ioutil.ReadAll(r.Body)
 				if err != nil {
 					ch <- t
@@ -390,7 +380,6 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		// Insert new string into strings DB
 		err = S.Insert(s)
 		if err != nil {
-			fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - String Insert Error")
 			return 5004, rest.ServerError()
 		}
 
@@ -401,7 +390,6 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		c.Collection.Strings = append(c.Collection.Strings, s)
 		err = C.UpdateId(c.Collection.Id, c.Collection)
 		if err != nil {
-			fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Update Collection Error")
 			return 5006, rest.ServerError()
 		}
 	}
@@ -428,7 +416,6 @@ func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		fmt.Println("DELETE /collections/" + c.Collection.Id.Hex() + "/strings/" + c.String.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
 	C := session.DB(mongoDb).C("collections")
@@ -454,7 +441,6 @@ func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Update Collection
 	err = C.UpdateId(c.Collection.Id, c.Collection)
 	if err != nil {
-		fmt.Println("DELETE /collections/" + c.Collection.Id.Hex() + "/strings - Update Collection Error")
 		return 5006, rest.ServerError()
 	}
 

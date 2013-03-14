@@ -85,11 +85,18 @@ func APIHandler(w http.ResponseWriter, req *http.Request) {
 	// Default error when method is not found
 	statusCode := 405
 	response = rest.InvalidMethodError(&[]rest.Rel{
-		rest.Rel{"POST": "/collections"},
+		rest.Rel{
+			"POST":   "/collections",
+			"Params": "name",
+		},
 		rest.Rel{"GET": "/collections/{CollectionId}"},
-		rest.Rel{"PUT": "/collections/{CollectionId}"},
+		rest.Rel{"PUT": "/collections/{CollectionId}",
+			"Params": "name",
+		},
 		rest.Rel{"DELETE": "/collections/{CollectionId}"},
-		rest.Rel{"POST": "/collections/{CollectionId}/strings"},
+		rest.Rel{"POST": "/collections/{CollectionId}/strings",
+			"Params": "string",
+		},
 		rest.Rel{"DELETE": "/collections/{CollectionId}/strings/{StringId}"},
 	})
 
