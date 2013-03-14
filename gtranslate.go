@@ -1,3 +1,5 @@
+// Copyright (c) 2013 Melvin Tercan, https://github.com/melvinmt
+
 package main
 
 var gLangs = map[string]string{
