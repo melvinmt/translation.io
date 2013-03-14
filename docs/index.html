@@ -61,12 +61,12 @@
 		<div class="large-12 columns">
 			<h3 class="subheader"><a name="post-collections" href="#post-collections">POST /collections</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections \
 -d "name=My Collection"</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Collection": {
-        "Id": "51413c9c5a8c9b0096000001",
+        "Id": "514148ed4ee25e0002000001",
         "Name": "My Collection",
         "Strings": null
     }
@@ -75,13 +75,13 @@
 
 <h3 class="subheader"><a name="put-collections" href="#put-collections">PUT /collections/{CollectionId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001 \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001 \
 -X PUT \
 -d "name=My Awesome Collection"</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Collection": {
-        "Id": "51413c9c5a8c9b0096000001",
+        "Id": "514148ed4ee25e0002000001",
         "Name": "My Awesome Collection",
         "Strings": null
     }
@@ -91,12 +91,12 @@
 
 			<h3 class="subheader"><a name="post-strings" href="#post-strings">POST /collections/{CollectionId}/strings</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001/strings \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001/strings \
 -d "string=Welcome my friend"</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "String": {
-        "Id": "514139a95a8c9b867e000002",
+        "Id": "514149384ee25e0002000003",
         "String": "Welcome my friend",
         "Translations": {
             "ar": "نرحب صديقي",
@@ -136,15 +136,15 @@
 
 			<h3 class="subheader"><a name="get-collections" href="#get-collections">GET /collections/{CollectionId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001</pre>
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Collection": {
-        "Id": "51413c9c5a8c9b0096000001",
+        "Id": "514148ed4ee25e0002000001",
         "Name": "My Awesome Collection",
         "Strings": [
             {
-                "Id": "514139a95a8c9b867e000002",
+                "Id": "514149384ee25e0002000003",
                 "String": "Welcome my friend",
                 "Translations": {
                     "ar": "نرحب صديقي",
@@ -187,7 +187,7 @@
 
 			<h3 class="subheader"><a name="delete-collections" href="#delete-collections">DELETE /collections/{CollectionId}/strings/{StringId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001/strings/514140fc5a8c9b016f000001 \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001/strings/514149384ee25e0002000003 \
 -X DELETE</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
@@ -195,9 +195,9 @@
 }</pre>
 			<hr />
 
-			<h3 class="subheader"><a name="delete-strings" href="#delete-strings">DELETE /collections/{CollectionId}/strings/{StringId}</a></h3>
+			<h3 class="subheader"><a name="delete-collections" href="#delete-collections">DELETE /collections/{CollectionId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001 \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/5141491d4ee25e0002000002 \
 -X DELETE</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
@@ -207,7 +207,7 @@
 
 			<h3 class="subheader"><a name="errors" href="#errors">Errors</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections</pre>
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Error": {
@@ -227,7 +227,7 @@
 
 			<h3 class="subheader"><a name="hateoas" href="#hateoas">HATEOAS</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://localhost:8080/collections \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections \
 -d "name=My New Collection"</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
@@ -236,21 +236,21 @@
     },
     "Next": [
         {
-            "GET": "/collections/514142695a8c9b0193000001"
+            "GET": "/collections/51414ab34ee25e0002000004"
         },
         {
-            "PUT": "/collections/514142695a8c9b0193000001",
+            "PUT": "/collections/51414ab34ee25e0002000004",
             "Params": "name"
         },
         {
-            "DELETE": "/collections/514142695a8c9b0193000001"
+            "DELETE": "/collections/51414ab34ee25e0002000004"
         },
         {
-            "POST": "/collections/514142695a8c9b0193000001/strings",
+            "POST": "/collections/51414ab34ee25e0002000004/strings",
             "Params": "string"
         },
         {
-            "DELETE": "/collections/514142695a8c9b0193000001/strings/{StringId}"
+            "DELETE": "/collections/51414ab34ee25e0002000004/strings/{StringId}"
         }
     ]
 }</pre>
