@@ -119,7 +119,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 		c.Name = name
 		err = C.Insert(c)
 		if err != nil {
-			return 5003, rest.ServerError()
+			return 500, rest.ServerError()
 		}
 	}
 
@@ -240,13 +240,13 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 
 	// Check Id
 	if !c.Collection.Id.Valid() {
-		return 4041, rest.NotFoundError()
+		return 404, rest.NotFoundError()
 	}
 
 	// Initialize DB
 	session, err := mgo.Dial(mongoPath)
 	if err != nil {
-		return 5001, rest.ServerError()
+		return 500, rest.ServerError()
 	}
 	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
@@ -254,10 +254,10 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	// Find Collection
 	err = C.FindId(c.Collection.Id).One(&c.Collection)
 	if err != nil && err != mgo.ErrNotFound {
-		return 5002, rest.ServerError()
+		return 500, rest.ServerError()
 	}
 	if err == mgo.ErrNotFound {
-		return 4042, rest.NotFoundError()
+		return 404, rest.NotFoundError()
 	}
 
 	// Validate string
@@ -293,7 +293,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	S := session.DB(mongoDb).C("strings")
 	err = S.Find(bson.M{"string": str}).One(&s)
 	if err != nil && err != mgo.ErrNotFound {
-		return 5003, rest.ServerError()
+		return 500, rest.ServerError()
 	}
 
 	// Create new String
@@ -380,7 +380,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		// Insert new string into strings DB
 		err = S.Insert(s)
 		if err != nil {
-			return 5004, rest.ServerError()
+			return 500, rest.ServerError()
 		}
 
 	}
@@ -390,7 +390,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		c.Collection.Strings = append(c.Collection.Strings, s)
 		err = C.UpdateId(c.Collection.Id, c.Collection)
 		if err != nil {
-			return 5006, rest.ServerError()
+			return 500, rest.ServerError()
 		}
 	}
 
@@ -441,7 +441,7 @@ func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
 	// Update Collection
 	err = C.UpdateId(c.Collection.Id, c.Collection)
 	if err != nil {
-		return 5006, rest.ServerError()
+		return 500, rest.ServerError()
 	}
 
 	return 200, &rest.APISuccess{
