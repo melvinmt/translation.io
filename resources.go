@@ -450,6 +450,14 @@ func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
 			c.Collection.Strings = append(c.Collection.Strings[:i], c.Collection.Strings[i+1:]...)
 		}
 	}
+
+	// Update Collection
+	err = C.UpdateId(c.Collection.Id, c.Collection)
+	if err != nil {
+		fmt.Println("DELETE /collections/" + c.Collection.Id.Hex() + "/strings - Update Collection Error")
+		return 5006, rest.ServerError()
+	}
+
 	return 200, &rest.APISuccess{
 		"Success": true,
 		"Next": &[]rest.Rel{

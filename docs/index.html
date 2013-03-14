@@ -66,7 +66,7 @@
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Collection": {
-        "Id": "514148ed4ee25e0002000001",
+        "Id": "514154dde4d8f70002000001",
         "Name": "My Collection",
         "Strings": null
     }
@@ -75,13 +75,13 @@
 
 <h3 class="subheader"><a name="put-collections" href="#put-collections">PUT /collections/{CollectionId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001 \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514154dde4d8f70002000001 \
 -X PUT \
 -d "name=My Awesome Collection"</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Collection": {
-        "Id": "514148ed4ee25e0002000001",
+        "Id": "514154dde4d8f70002000001",
         "Name": "My Awesome Collection",
         "Strings": null
     }
@@ -91,12 +91,12 @@
 
 			<h3 class="subheader"><a name="post-strings" href="#post-strings">POST /collections/{CollectionId}/strings</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001/strings \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514154dde4d8f70002000001/strings \
 -d "string=Welcome my friend"</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "String": {
-        "Id": "514149384ee25e0002000003",
+        "Id": "51415535e4d8f70002000002",
         "String": "Welcome my friend",
         "Translations": {
             "ar": "نرحب صديقي",
@@ -136,15 +136,15 @@
 
 			<h3 class="subheader"><a name="get-collections" href="#get-collections">GET /collections/{CollectionId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001</pre>
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514154dde4d8f70002000001</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
     "Collection": {
-        "Id": "514148ed4ee25e0002000001",
+        "Id": "514154dde4d8f70002000001",
         "Name": "My Awesome Collection",
         "Strings": [
             {
-                "Id": "514149384ee25e0002000003",
+                "Id": "51415535e4d8f70002000002",
                 "String": "Welcome my friend",
                 "Translations": {
                     "ar": "نرحب صديقي",
@@ -187,7 +187,7 @@
 
 			<h3 class="subheader"><a name="delete-collections" href="#delete-collections">DELETE /collections/{CollectionId}/strings/{StringId}</a></h3>
 			<p><strong>Request</strong></p>
-			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514148ed4ee25e0002000001/strings/514149384ee25e0002000003 \
+			<pre class="panel">curl http://radiant-wave-4656.herokuapp.com/collections/514154dde4d8f70002000001/strings/51415535e4d8f70002000002 \
 -X DELETE</pre>
 			<p><strong>Response</strong></p>
 			<pre class="panel">{
