@@ -28,7 +28,7 @@ func Router(path string) rest.Resource {
 		} else {
 			return &rest.NotFound{}
 		}
-	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)/?", path); match {
+	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
 		if bson.IsObjectIdHex(params[1]) {
 			return &Collection{
 				Id: bson.ObjectIdHex(params[1]),

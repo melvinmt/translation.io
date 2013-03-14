@@ -5454,3 +5454,8 @@ table tfoot tr td {
 .f-dropdown.large {
   max-width: 800px;
 }
+
+/* line 48, ../sass/app.scss */
+.panel ul {
+  list-style-type: none;
+}

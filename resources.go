@@ -50,7 +50,9 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 
 		// GET on /collections (without an ID) is not allowed
 		return 405, rest.InvalidMethodError(&[]rest.Rel{
-			rest.Rel{"POST": "/collections"},
+			rest.Rel{"POST": "/collections",
+				"Params": "name",
+			},
 		})
 
 	} else {
@@ -66,10 +68,15 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 		return 200, &rest.APISuccess{
 			"Collection": c,
 			"Next": &[]rest.Rel{
-				rest.Rel{"GET": "/collections/" + c.Id.Hex()},
-				rest.Rel{"PUT": "/collections/" + c.Id.Hex()},
+				rest.Rel{
+					"PUT":    "/collections/" + c.Id.Hex(),
+					"Params": "name",
+				},
 				rest.Rel{"DELETE": "/collections/" + c.Id.Hex()},
-				rest.Rel{"POST": "/collections/" + c.Id.Hex() + "/strings"},
+				rest.Rel{
+					"POST":   "/collections/" + c.Id.Hex() + "/strings",
+					"Params": "string",
+				},
 				rest.Rel{"DELETE": "/collections/" + c.Id.Hex() + "/strings/{StringId}"},
 			},
 		}
@@ -111,7 +118,20 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	}
 
 	// Return Collection
-	return 200, &rest.APISuccess{"Collection": c}
+	return 200, &rest.APISuccess{
+		"Collection": c,
+		"Next": &[]rest.Rel{
+			rest.Rel{"GET": "/collections/" + c.Id.Hex()},
+			rest.Rel{"PUT": "/collections/" + c.Id.Hex(),
+				"Params": "name",
+			},
+			rest.Rel{"DELETE": "/collections/" + c.Id.Hex()},
+			rest.Rel{"POST": "/collections/" + c.Id.Hex() + "/strings",
+				"Params": "string",
+			},
+			rest.Rel{"DELETE": "/collections/" + c.Id.Hex() + "/strings/{StringId}"},
+		},
+	}
 }
 
 func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
@@ -155,7 +175,17 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 	}
 
 	// Return Collection
-	return 200, &rest.APISuccess{"Collection": c}
+	return 200, &rest.APISuccess{
+		"Collection": c,
+		"Next": &[]rest.Rel{
+			rest.Rel{"GET": "/collections/" + c.Id.Hex()},
+			rest.Rel{"DELETE": "/collections/" + c.Id.Hex()},
+			rest.Rel{"POST": "/collections/" + c.Id.Hex() + "/strings",
+				"Params": "string",
+			},
+			rest.Rel{"DELETE": "/collections/" + c.Id.Hex() + "/strings/{StringId}"},
+		},
+	}
 }
 
 func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
@@ -175,7 +205,14 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 		fmt.Println("DELETE /collections/" + c.Id.Hex() + " - Delete Collection Error")
 		return 500, rest.ServerError()
 	}
-	return 200, &rest.APISuccess{"Success": true}
+	return 200, &rest.APISuccess{
+		"Success": true,
+		"Next": &[]rest.Rel{
+			rest.Rel{"POST": "/collections",
+				"Params": "name",
+			},
+		},
+	}
 }
 
 type CollectionStrings struct {
@@ -190,7 +227,9 @@ func (c *CollectionStrings) ToJSON() string {
 
 func (c *CollectionStrings) Get(v *url.Values) (int, rest.APIResponse) {
 	return 405, rest.InvalidMethodError(&[]rest.Rel{
-		rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings"},
+		rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings",
+			"Params": "string",
+		},
 		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.Hex() + "/strings/{StringId}"},
 	})
 }
@@ -236,6 +275,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 
 	// Init new String struct
 	s := String{}
+	existingString := false
 
 	// Search for similar string in Collection Strings array (makes "POST" idempotent)
 	if len(c.Collection.Strings) > 0 {
@@ -243,6 +283,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 			if Item.String == str {
 				s.Id = Item.Id
 				s.String = str
+				existingString = true
 				break
 			}
 		}
@@ -255,7 +296,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Strings Query Error")
 		return 5003, rest.ServerError()
 	}
-
+	fmt.Println(s.Id.Hex())
 	// Create new String
 	if s.Id == "" {
 
@@ -275,14 +316,16 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 
 		// Create channel
 		ch := make(chan Translation)
+		fmt.Println("here2?")
 
 		// Loop through languages
 		it := 0
 		for lang := range gLangs {
+			fmt.Println("here1?")
 
 			// Create a goroutine closure for every translation and collect the results into the channel
 			go func(lang string, ch chan Translation) {
-
+				fmt.Println("here?")
 				// Initialize Translation struct t
 				var t Translation
 
@@ -301,6 +344,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 					ch <- t
 					return // abort mission
 				}
+				fmt.Println("Translate:", url)
 				body, err := ioutil.ReadAll(r.Body)
 				if err != nil {
 					ch <- t
@@ -345,20 +389,29 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 
 	}
 
-	// Add String to Collection and Update Collection
-	c.Collection.Strings = append(c.Collection.Strings, s)
-	err = C.UpdateId(c.Collection.Id, c.Collection)
-	if err != nil {
-		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Update Collection Error")
-		return 5006, rest.ServerError()
+	if !existingString {
+		// Add String to Collection and Update Collection
+		c.Collection.Strings = append(c.Collection.Strings, s)
+		err = C.UpdateId(c.Collection.Id, c.Collection)
+		if err != nil {
+			fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Update Collection Error")
+			return 5006, rest.ServerError()
+		}
 	}
 
-	return 200, &rest.APISuccess{"Success": true}
+	return 200, &rest.APISuccess{
+		"String": s,
+		"Next": &[]rest.Rel{
+			rest.Rel{"DELETE": "/collections/" + c.Collection.Id.Hex() + "/strings/" + s.Id.Hex()},
+		},
+	}
 }
 
 func (c *CollectionStrings) Put(v *url.Values) (int, rest.APIResponse) {
 	return 405, rest.InvalidMethodError(&[]rest.Rel{
-		rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings"},
+		rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings",
+			"Params": "string",
+		},
 		rest.Rel{"DELETE": "/collections/" + c.Collection.Id.Hex() + "/strings/{StringId}"},
 	})
 }
@@ -390,5 +443,12 @@ func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
 			c.Collection.Strings = append(c.Collection.Strings[:i], c.Collection.Strings[i+1:]...)
 		}
 	}
-	return 200, &rest.APISuccess{"Success": true}
+	return 200, &rest.APISuccess{
+		"Success": true,
+		"Next": &[]rest.Rel{
+			rest.Rel{"POST": "/collections/" + c.Collection.Id.Hex() + "/strings",
+				"Params": "strings",
+			},
+		},
+	}
 }
