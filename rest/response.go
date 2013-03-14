@@ -56,10 +56,10 @@ func (s APISuccess) ToJSON() string {
 
 // Parses APIResponse interfaces
 func ParseAPIResponse(i interface{}) string {
-	b, err := json.Marshal(i)
+	b, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
 		// Oops, response could not be parsed:
-		b2, _ := json.Marshal(ServerError())
+		b2, _ := json.MarshalIndent(ServerError(), "", "    ")
 		return string(b2)
 	}
 	return string(b)

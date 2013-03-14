@@ -4,9 +4,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"labix.org/v2/mgo/bson"
 	"net/http"
 	"os"
+	"regexp"
 	"runtime"
 	"translation.io/rest"
 )
@@ -27,7 +29,7 @@ func Router(path string) rest.Resource {
 		} else {
 			return &rest.NotFound{}
 		}
-	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)/?", path); match {
+	} else if match, params := rest.MatchRoute("/collections/([a-z0-9]+)", path); match {
 		if bson.IsObjectIdHex(params[1]) {
 			return &Collection{
 				Id: bson.ObjectIdHex(params[1]),
@@ -41,8 +43,25 @@ func Router(path string) rest.Resource {
 	return &rest.NotFound{}
 }
 
-func RootHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "%s", "hi!")
+func DocsHandler(w http.ResponseWriter, req *http.Request) {
+	path := "docs" + req.URL.Path
+	if path == "docs/" {
+		path = "docs/index.html"
+	}
+	css, _ := regexp.Compile(".css$")
+	if css.MatchString(path) {
+		w.Header().Set("Content-Type", "text/css")
+	}
+	js, _ := regexp.Compile(".js$")
+	if js.MatchString(path) {
+		w.Header().Set("Content-Type", "text/javascript")
+	}
+
+	body, err := ioutil.ReadFile(path)
+	if err != nil {
+		http.Error(w, "Danger, Will Robinson! Danger! Page not found!", 404)
+	}
+	fmt.Fprintf(w, "%s", string(body))
 }
 
 // Handler parses all HTTP requests and retrieves responses
@@ -56,8 +75,10 @@ func APIHandler(w http.ResponseWriter, req *http.Request) {
 	values := &req.Form
 	path := req.URL.Path
 
-	if path == "/" {
-		RootHandler(w, req)
+	// Redirect everything else to Docs
+	regex, _ := regexp.Compile("/collections.*")
+	if !regex.MatchString(path) {
+		DocsHandler(w, req)
 		return
 	}
 

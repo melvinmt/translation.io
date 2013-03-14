@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<!--[if IE 8]> 				 <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+	<meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>translation.io</title>
+
+  <link rel="stylesheet" href="stylesheets/normalize.css" />
+  
+  <link rel="stylesheet" href="stylesheets/app.css" />
+  
+
+  <script src="javascripts/vendor/custom.modernizr.js"></script>
+
+</head>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h2>translation.io</h2>
+			<p>A simple Web API to translate strings.</p>
+			<hr />
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+				<div class="row">
+					<div class="large-6 columns">
+						<p><strong>Collection</strong></p>
+						<ul>
+							<li><a href="#post-collections">POST /collections</a></li>
+							<li><a href="#get-collections">GET /collections/{CollectionId}</a></li>
+							<li><a href="#put-collections">PUT /collections/{CollectionId}</a></li>
+							<li><a href="#delete-collections">DELETE /collections/{CollectionId}</a></li>
+						</ul>
+						<p><strong>Reference</strong></p>
+						<ul>
+							<li><a href="#errors">Errors</a></li>
+							<li><a href="#hateoas">HATEOAS</a></li>
+							<li><a href="#source">Source</a></li>
+						</ul>
+					</div>
+					<div class="large-6 columns">
+						<p><strong>String</strong></p>
+						<ul>
+							<li><a href="#post-strings">POST /collections/{CollectionId}/strings</a></li>
+							<li><a href="#delete-strings">DELETE /collections/{CollectionId}/strings/{StringId}</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h3 class="subheader"><a name="post-collections" href="#post-collections">POST /collections</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections \
+-d "name=My Collection"</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Collection": {
+        "Id": "51413c9c5a8c9b0096000001",
+        "Name": "My Collection",
+        "Strings": null
+    }
+}</pre>
+			<hr />
+
+<h3 class="subheader"><a name="put-collections" href="#put-collections">PUT /collections/{CollectionId}</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001 \
+-X PUT \
+-d "name=My Awesome Collection"</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Collection": {
+        "Id": "51413c9c5a8c9b0096000001",
+        "Name": "My Awesome Collection",
+        "Strings": null
+    }
+}</pre>
+			<hr />
+
+
+			<h3 class="subheader"><a name="post-strings" href="#post-strings">POST /collections/{CollectionId}/strings</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001/strings \
+-d "string=Welcome my friend"</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "String": {
+        "Id": "514139a95a8c9b867e000002",
+        "String": "Welcome my friend",
+        "Translations": {
+            "ar": "نرحب صديقي",
+            "cs": "Vítejte můj přítel",
+            "da": "Velkommen min ven",
+            "de": "Herzlich willkommen mein Freund",
+            "el": "Καλώς τον φίλο μου",
+            "es": "Bienvenidos a mi amigo",
+            "fi": "Tervetuloa ystäväni",
+            "fr": "Bienvenue mon ami",
+            "hi": "आपका स्वागत है मेरे दोस्त",
+            "hu": "Üdvözöljük a barátom",
+            "id": "Selamat datang teman saya",
+            "it": "Benvenuto amico mio",
+            "iw": "ברוך הבא החבר שלי",
+            "ja": "私の友人を歓迎する",
+            "ko": "내 친구에 오신 것을 환영합니다",
+            "ms": "Selamat datang kawan saya",
+            "nl": "Welkom mijn vriend",
+            "no": "Velkommen min venn",
+            "pl": "Witaj przyjacielu",
+            "pt": "Bem-vindo, meu amigo",
+            "ro": "Bine ai venit prietenul meu",
+            "ru": "Здравствуйте, мой друг",
+            "sk": "Vitajte môj priateľ",
+            "sv": "Välkommen min vän",
+            "th": "ยินดีต้อนรับเพื่อนของฉัน",
+            "tr": "Arkadaşım Hoşgeldiniz",
+            "uk": "Привіт мій друг",
+            "vi": "Chào mừng bạn bè của tôi",
+            "zh-CN": "欢迎光临我的朋友",
+            "zh-TW": "歡迎光臨我的朋友"
+        }
+    }
+}</pre>
+			<hr />
+
+			<h3 class="subheader"><a name="get-collections" href="#get-collections">GET /collections/{CollectionId}</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Collection": {
+        "Id": "51413c9c5a8c9b0096000001",
+        "Name": "My Awesome Collection",
+        "Strings": [
+            {
+                "Id": "514139a95a8c9b867e000002",
+                "String": "Welcome my friend",
+                "Translations": {
+                    "ar": "نرحب صديقي",
+                    "cs": "Vítejte můj přítel",
+                    "da": "Velkommen min ven",
+                    "de": "Herzlich willkommen mein Freund",
+                    "el": "Καλώς τον φίλο μου",
+                    "es": "Bienvenidos a mi amigo",
+                    "fi": "Tervetuloa ystäväni",
+                    "fr": "Bienvenue mon ami",
+                    "hi": "आपका स्वागत है मेरे दोस्त",
+                    "hu": "Üdvözöljük a barátom",
+                    "id": "Selamat datang teman saya",
+                    "it": "Benvenuto amico mio",
+                    "iw": "ברוך הבא החבר שלי",
+                    "ja": "私の友人を歓迎する",
+                    "ko": "내 친구에 오신 것을 환영합니다",
+                    "ms": "Selamat datang kawan saya",
+                    "nl": "Welkom mijn vriend",
+                    "no": "Velkommen min venn",
+                    "pl": "Witaj przyjacielu",
+                    "pt": "Bem-vindo, meu amigo",
+                    "ro": "Bine ai venit prietenul meu",
+                    "ru": "Здравствуйте, мой друг",
+                    "sk": "Vitajte môj priateľ",
+                    "sv": "Välkommen min vän",
+                    "th": "ยินดีต้อนรับเพื่อนของฉัน",
+                    "tr": "Arkadaşım Hoşgeldiniz",
+                    "uk": "Привіт мій друг",
+                    "vi": "Chào mừng bạn bè của tôi",
+                    "zh-CN": "欢迎光临我的朋友",
+                    "zh-TW": "歡迎光臨我的朋友"
+                }
+            }
+        ]
+    }
+}</pre>
+			<hr />
+
+
+			<h3 class="subheader"><a name="delete-collections" href="#delete-collections">DELETE /collections/{CollectionId}/strings/{StringId}</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001/strings/514140fc5a8c9b016f000001 \
+-X DELETE</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Success": true
+}</pre>
+			<hr />
+
+			<h3 class="subheader"><a name="delete-strings" href="#delete-strings">DELETE /collections/{CollectionId}/strings/{StringId}</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections/51413c9c5a8c9b0096000001 \
+-X DELETE</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Success": true
+}</pre>
+			<hr />
+
+			<h3 class="subheader"><a name="errors" href="#errors">Errors</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Error": {
+        "Type": "invalid-method",
+        "Message": "Sorry, this method is not allowed.",
+        "Code": 405,
+        "Param": [],
+        "Allowed": [
+            {
+                "POST": "/collections",
+                "Params": "name"
+            }
+        ]
+    }
+}</pre>
+			<hr />
+
+			<h3 class="subheader"><a name="hateoas" href="#hateoas">HATEOAS</a></h3>
+			<p><strong>Request</strong></p>
+			<pre class="panel">curl http://localhost:8080/collections \
+-d "name=My New Collection"</pre>
+			<p><strong>Response</strong></p>
+			<pre class="panel">{
+    "Collection": {
+        ...
+    },
+    "Next": [
+        {
+            "GET": "/collections/514142695a8c9b0193000001"
+        },
+        {
+            "PUT": "/collections/514142695a8c9b0193000001",
+            "Params": "name"
+        },
+        {
+            "DELETE": "/collections/514142695a8c9b0193000001"
+        },
+        {
+            "POST": "/collections/514142695a8c9b0193000001/strings",
+            "Params": "string"
+        },
+        {
+            "DELETE": "/collections/514142695a8c9b0193000001/strings/{StringId}"
+        }
+    ]
+}</pre>
+			<hr />
+
+			
+			<h3 class="subheader"><a name="source" href="#source">Source</a></h3>
+			<div class="panel"><a href="https://github.com/melvinmt/translation.io">https://github.com/melvinmt/translation.io</a></div>
+			<hr />
+
+	</div>
+
+  <script>
+  document.write('<script src=' +
+  ('__proto__' in {} ? 'javascripts/vendor/zepto' : 'javascripts/vendor/jquery') +
+  '.js><\/script>')
+  </script>
+  
+  <script src="javascripts/foundation/foundation.js"></script>
+	
+	<script src="javascripts/foundation/foundation.alerts.js"></script>
+	
+	<script src="javascripts/foundation/foundation.clearing.js"></script>
+	
+	<script src="javascripts/foundation/foundation.cookie.js"></script>
+	
+	<script src="javascripts/foundation/foundation.dropdown.js"></script>
+	
+	<script src="javascripts/foundation/foundation.forms.js"></script>
+	
+	<script src="javascripts/foundation/foundation.joyride.js"></script>
+	
+	<script src="javascripts/foundation/foundation.magellan.js"></script>
+	
+	<script src="javascripts/foundation/foundation.orbit.js"></script>
+	
+	<script src="javascripts/foundation/foundation.placeholder.js"></script>
+	
+	<script src="javascripts/foundation/foundation.reveal.js"></script>
+	
+	<script src="javascripts/foundation/foundation.section.js"></script>
+	
+	<script src="javascripts/foundation/foundation.tooltips.js"></script>
+	
+	<script src="javascripts/foundation/foundation.topbar.js"></script>
+	
+  
+  <script>
+    $(document).foundation();
+  </script>
+</body>
+</html>
