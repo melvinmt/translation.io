@@ -43,7 +43,7 @@ func (c *Collection) Get(v *url.Values) (int, rest.APIResponse) {
 	if err != nil {
 		return 500, rest.ServerError()
 	}
-	C := session.DB("transio").C("collections")
+	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
 	if !c.Id.Valid() {
@@ -99,7 +99,7 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	if err != nil {
 		return 500, rest.ServerError()
 	}
-	C := session.DB("transio").C("collections")
+	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
 	// Insert new Collection into DB
@@ -127,7 +127,7 @@ func (c *Collection) Put(v *url.Values) (int, rest.APIResponse) {
 		fmt.Println("PUT /collections/" + c.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
-	C := session.DB("transio").C("collections")
+	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
 	// Validate Name
@@ -166,7 +166,7 @@ func (c *Collection) Delete(v *url.Values) (int, rest.APIResponse) {
 		fmt.Println("DELETE /collections/" + c.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
-	C := session.DB("transio").C("collections")
+	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
 	// Remove Collection
@@ -208,7 +208,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - DB Connection Error")
 		return 5001, rest.ServerError()
 	}
-	C := session.DB("transio").C("collections")
+	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
 	// Find Collection
@@ -249,7 +249,7 @@ func (c *CollectionStrings) Post(v *url.Values) (int, rest.APIResponse) {
 	}
 
 	// Search for same String in DB
-	S := session.DB("transio").C("strings")
+	S := session.DB(mongoDb).C("strings")
 	err = S.Find(bson.M{"string": str}).One(&s)
 	if err != nil && err != mgo.ErrNotFound {
 		fmt.Println("POST /collections/" + c.Collection.Id.Hex() + "/strings - Strings Query Error")
@@ -371,7 +371,7 @@ func (c *CollectionStrings) Delete(v *url.Values) (int, rest.APIResponse) {
 		fmt.Println("DELETE /collections/" + c.Collection.Id.Hex() + "/strings/" + c.String.Id.Hex() + " - DB Connection Error")
 		return 500, rest.ServerError()
 	}
-	C := session.DB("transio").C("collections")
+	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
 	// Find collection

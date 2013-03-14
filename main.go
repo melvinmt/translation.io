@@ -12,6 +12,7 @@ import (
 )
 
 var mongoPath string
+var mongoDb string
 
 // The Router method routes requests to the appropriate Resource
 func Router(path string) rest.Resource {
@@ -95,8 +96,10 @@ func main() {
 
 	if os.Getenv("MONGOHQ_URL") != "" {
 		mongoPath = os.Getenv("MONGOHQ_URL")
+		mongoDb = "app13325198"
 	} else {
 		mongoPath = "127.0.0.1"
+		mongoDb = "transio"
 	}
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
