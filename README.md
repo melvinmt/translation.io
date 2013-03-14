@@ -1,1 +1,3 @@
-A translation REST api in Go (work in progress).
+# translation.io
+
+A simple Go Web API to translate strings.
