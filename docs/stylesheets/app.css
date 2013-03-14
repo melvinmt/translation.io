@@ -5459,3 +5459,10 @@ table tfoot tr td {
 .panel ul {
   list-style-type: none;
 }
+
+/* line 53, ../sass/app.scss */
+#footer {
+  margin-bottom: 500px;
+  text-align: center;
+  line-height: 250px;
+}
