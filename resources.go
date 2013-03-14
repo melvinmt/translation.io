@@ -108,10 +108,13 @@ func (c *Collection) Post(v *url.Values) (int, rest.APIResponse) {
 	C := session.DB(mongoDb).C("collections")
 	defer session.Close()
 
-	err = C.Find(bson.M{"name": name}).One(&c)
-	if err != nil && err != mgo.ErrNotFound {
-		return 500, rest.ServerError()
-	}
+	/*	
+		// Check if a collection with the same name already exists
+		err = C.Find(bson.M{"name": name}).One(&c)
+		if err != nil && err != mgo.ErrNotFound {
+			return 500, rest.ServerError()
+		}
+	*/
 
 	if c.Name == "" {
 		// Insert new Collection into DB
